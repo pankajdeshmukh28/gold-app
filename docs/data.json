@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-04-22T14:11:04+00:00",
+  "timestamp": "2026-04-22T15:42:02+00:00",
   "status": "ok",
   "inputs": {
-    "spot_usd_per_oz": 4747.2,
+    "spot_usd_per_oz": 4728.9,
     "usd_inr": 93.6058,
-    "us_price_usd": 4860.95,
+    "us_price_usd": 4841.36,
     "us_source": "jmbullion",
     "us_url": "https://www.jmbullion.com/1-oz-gold-bar-secondary-market/",
     "us_grams": 31.1035,
@@ -12,13 +12,13 @@
     "us_notes": "Using JM Bullion 1-oz gold bar (lowest in-stock) \u2014 Costco is behind Akamai bot protection."
   },
   "verdict": {
-    "us_usd_per_gram": 156.28,
-    "india_usd_per_gram": 157.2,
-    "india_inr_per_gram": 14715.28,
-    "delta_pct": -0.59,
+    "us_usd_per_gram": 155.65,
+    "india_usd_per_gram": 156.6,
+    "india_inr_per_gram": 14658.55,
+    "delta_pct": -0.6,
     "verdict": "BUY_IN_US",
-    "verdict_human": "US is 0.59% cheaper than India"
+    "verdict_human": "US is 0.60% cheaper than India"
   },
   "alert_sent": false,
-  "last_us_price_seen": 4869.38
+  "last_us_price_seen": 4860.95
 }
