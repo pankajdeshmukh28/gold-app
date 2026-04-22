@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gold" />
+  <title>Gold — US vs India</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>🪙</text></svg>" />
+  <style>
+    :root {
+      --bg: #0b0b0c;
+      --surface: #17171a;
+      --surface-2: #222226;
+      --fg: #f2f2f2;
+      --muted: #8a8a91;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --border: #2a2a2f;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: max(16px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 20px; margin: 0; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+    .dot.stale { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
+    .dot.error { background: var(--accent-red); box-shadow: 0 0 8px var(--accent-red); }
+    .verdict-card {
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .verdict-label {
+      font-size: 12px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+    .verdict-big {
+      font-size: 15px; font-weight: 500; color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .delta {
+      font-size: 52px; font-weight: 700; letter-spacing: -0.04em;
+      line-height: 1;
+      margin: 8px 0 4px;
+    }
+    .delta.buy-us { color: var(--accent-green); }
+    .delta.buy-in { color: var(--accent-red); }
+    .delta.neutral { color: var(--muted); }
+    .verdict-sub {
+      font-size: 13px; color: var(--muted); margin-top: 6px;
+    }
+    .grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .cell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .cell .label {
+      font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .cell .val {
+      font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
+    }
+    .cell .sub {
+      font-size: 11px; color: var(--muted); margin-top: 4px;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .chart-title {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 12px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    svg.spark {
+      width: 100%; height: 80px; display: block;
+    }
+    .details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .details .row {
+      display: flex; justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .details .row:last-child { border-bottom: none; }
+    .details .row .k { color: var(--muted); }
+    .details .row .v { color: var(--fg); font-variant-numeric: tabular-nums; }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 20px;
+    }
+    footer a { color: var(--muted); text-decoration: underline; }
+    .error-banner {
+      background: #2a0f12;
+      border: 1px solid #5c1d24;
+      color: #fca5a5;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .notes-banner {
+      background: #2a1f0a;
+      border: 1px solid #5a4014;
+      color: #fbbf24;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🪙 Gold: US vs India</h1>
+      <span id="status-dot" class="dot" title="ok"></span>
+    </header>
+
+    <div id="error-banner" class="error-banner" style="display:none;"></div>
+    <div id="notes-banner" class="notes-banner" style="display:none;"></div>
+
+    <div class="verdict-card">
+      <div class="verdict-label">Verdict</div>
+      <div class="verdict-big" id="verdict-big">—</div>
+      <div class="delta" id="delta">—</div>
+      <div class="verdict-sub" id="verdict-sub">—</div>
+    </div>
+
+    <div class="grid">
+      <div class="cell">
+        <div class="label">US $/gram</div>
+        <div class="val" id="us-per-g">—</div>
+        <div class="sub" id="us-source">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">India $/gram (+GST)</div>
+        <div class="val" id="in-per-g">—</div>
+        <div class="sub" id="in-sub">incl. 3% GST</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">
+        <span>Delta % — recent history</span>
+        <span id="chart-range">—</span>
+      </div>
+      <svg id="spark" class="spark" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="details">
+      <div class="row"><span class="k">Spot gold</span><span class="v" id="spot">—</span></div>
+      <div class="row"><span class="k">USD → INR</span><span class="v" id="fx">—</span></div>
+      <div class="row"><span class="k">US bar price</span><span class="v" id="us-price">—</span></div>
+      <div class="row"><span class="k">SKU size</span><span class="v" id="us-grams">—</span></div>
+      <div class="row"><span class="k">Last check</span><span class="v" id="ts">—</span></div>
+    </div>
+
+    <footer>
+      Directional only, not financial advice. Data updates every few hours.<br/>
+      <a id="src-link" target="_blank" rel="noopener">source</a>
+    </footer>
+  </div>
+
+  <script>
+    const fmt$ = (n) => n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtShort$ = (n) => n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const fmtNum = (n, d = 2) => n == null ? '—' : Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const fmtPct = (n) => n == null ? '—' : (n > 0 ? '+' : '') + Number(n).toFixed(2) + '%';
+
+    function relTime(iso) {
+      if (!iso) return '—';
+      const then = new Date(iso).getTime();
+      const diff = (Date.now() - then) / 1000;
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function setStatus(state, title) {
+      const d = document.getElementById('status-dot');
+      d.className = 'dot ' + state;
+      d.title = title || state;
+    }
+
+    function renderSpark(history) {
+      const svg = document.getElementById('spark');
+      svg.innerHTML = '';
+      if (!history || history.length < 2) {
+        document.getElementById('chart-range').textContent = 'not enough data yet';
+        return;
+      }
+      const values = history.map(h => h.delta);
+      const min = Math.min(...values, 0);
+      const max = Math.max(...values, 0);
+      const span = (max - min) || 1;
+      const w = 300, h = 80, pad = 4;
+      const step = (w - 2 * pad) / (history.length - 1);
+
+      const y = v => h - pad - ((v - min) / span) * (h - 2 * pad);
+      const zeroY = y(0);
+
+      const pts = history.map((d, i) => [pad + i * step, y(d.delta)]);
+      const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+
+      const zeroLine = `<line x1="${pad}" y1="${zeroY.toFixed(1)}" x2="${w - pad}" y2="${zeroY.toFixed(1)}" stroke="#2a2a2f" stroke-dasharray="3 3" />`;
+      const fill = `<path d="${d} L${pts[pts.length-1][0].toFixed(1)},${zeroY.toFixed(1)} L${pts[0][0].toFixed(1)},${zeroY.toFixed(1)} Z" fill="rgba(245, 158, 11, 0.08)" />`;
+      const stroke = `<path d="${d}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+      const lastX = pts[pts.length - 1][0], lastY = pts[pts.length - 1][1];
+      const dot = `<circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3" fill="#f59e0b"/>`;
+
+      svg.innerHTML = zeroLine + fill + stroke + dot;
+
+      const from = new Date(history[0].t);
+      document.getElementById('chart-range').textContent =
+        history.length + ' pts · ' + relTime(history[0].t).replace(' ago', '') + ' → now';
+    }
+
+    async function load() {
+      try {
+        const r = await fetch('data.json?_=' + Date.now());
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+
+        if (data.status === 'error') {
+          setStatus('error', 'fetch errors');
+          const eb = document.getElementById('error-banner');
+          eb.style.display = 'block';
+          eb.textContent = 'Last run failed: ' + (data.errors || []).join('; ');
+          return;
+        }
+
+        const stale = (Date.now() - new Date(data.timestamp).getTime()) > 1000 * 60 * 60 * 12;
+        setStatus(stale ? 'stale' : '', stale ? 'data is over 12h old' : 'ok');
+
+        const v = data.verdict || {};
+        document.getElementById('verdict-big').textContent =
+          v.verdict === 'BUY_IN_US' ? 'Cheaper in the US' :
+          v.verdict === 'BUY_IN_INDIA' ? 'Cheaper in India' :
+          v.verdict === 'NEUTRAL' ? 'Roughly equivalent' : '—';
+
+        const deltaEl = document.getElementById('delta');
+        const dp = v.delta_pct;
+        deltaEl.textContent = fmtPct(dp);
+        deltaEl.className = 'delta ' + (dp < -0.1 ? 'buy-us' : dp > 0.1 ? 'buy-in' : 'neutral');
+
+        document.getElementById('verdict-sub').textContent = v.verdict_human || '';
+
+        document.getElementById('us-per-g').textContent = fmt$(v.us_usd_per_gram);
+        document.getElementById('in-per-g').textContent = fmt$(v.india_usd_per_gram);
+
+        const inputs = data.inputs || {};
+        document.getElementById('us-source').textContent = (inputs.us_source || '').toUpperCase();
+        document.getElementById('spot').textContent = fmt$(inputs.spot_usd_per_oz) + '/oz';
+        document.getElementById('fx').textContent = '₹' + fmtNum(inputs.usd_inr, 2);
+        document.getElementById('us-price').textContent = fmt$(inputs.us_price_usd);
+        document.getElementById('us-grams').textContent = fmtNum(inputs.us_grams, 4) + ' g';
+        document.getElementById('ts').textContent = relTime(data.timestamp);
+
+        const link = document.getElementById('src-link');
+        link.href = inputs.us_url || '#';
+        link.textContent = 'view ' + (inputs.us_source || 'source') + ' page';
+
+        if (inputs.us_notes) {
+          const nb = document.getElementById('notes-banner');
+          nb.style.display = 'block';
+          nb.textContent = inputs.us_notes;
+        }
+
+        try {
+          const hr = await fetch('history.json?_=' + Date.now());
+          if (hr.ok) renderSpark(await hr.json());
+        } catch (_) {}
+      } catch (e) {
+        setStatus('error', e.message);
+        const eb = document.getElementById('error-banner');
+        eb.style.display = 'block';
+        eb.textContent = 'Could not load data.json (' + e.message + '). First run may not be done yet.';
+      }
+    }
+
+    load();
+    setInterval(load, 60_000);
+  </script>
+</body>
+</html>
