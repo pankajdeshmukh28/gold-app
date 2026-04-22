@@ -158,7 +158,8 @@ gold-app/
 
 This is a **directional** tool — not a financial calculator. Known approximations:
 
-- **India side** is computed as `spot_usd × USDINR ÷ 31.1035 × (1 + GST)`. This tracks the international benchmark + GST, but **does not include** Indian local retail premiums (import duty ~10%, making charges, jeweler margin — can add 5–15% to real retail).
+- **India side** is computed as `spot_usd × USDINR ÷ 31.1035 × (1 + GST)` and displayed per 10g (the Indian market convention used by MCX and jewelers). This tracks the international benchmark + GST, but **does not include** Indian local retail premiums (import duty ~10%, making charges, jeweler margin — can add 5–15% to real retail).
+- **10g vs tola**: Modern Indian pricing uses 10 grams as the standard quote unit. The traditional "tola" is ~11.66g and still used for coins. We use 10g to match MCX / news-headline convention. If you want the traditional tola value, multiply the per-gram figures by 11.664.
 - **US side** is a retail bar price (Costco or APMEX), which already includes that retailer's premium over spot.
 - So the reported "% cheaper" leans toward **understating** how much cheaper the US really is vs. *Indian retail jewelry*, but is roughly right vs. *Indian digital gold / ETFs / coins*.
 - **FX rate** is mid-market (no forex spread). Your actual money conversion may cost 0.5–2% more.

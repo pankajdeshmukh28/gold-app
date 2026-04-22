@@ -109,11 +109,21 @@ def compute_verdict(
     usd_inr: float,
     gst_rate: float,
 ) -> dict:
+    """All-in per-unit normalization for side-by-side comparison.
+
+    Indian market convention: prices are quoted per 10 grams (MCX, jewelers,
+    news headlines). We surface that explicitly; per-gram retained for
+    backward compatibility and finer-grained comparisons.
+    """
     us_usd_per_gram = us_price_usd / us_grams
+    us_usd_per_10g = us_usd_per_gram * 10
+    us_inr_per_10g = us_usd_per_10g * usd_inr
 
     india_inr_per_gram_pre_gst = (spot_usd_per_oz * usd_inr) / TROY_OUNCE_GRAMS
     india_inr_per_gram = india_inr_per_gram_pre_gst * (1 + gst_rate)
     india_usd_per_gram = india_inr_per_gram / usd_inr
+    india_inr_per_10g = india_inr_per_gram * 10
+    india_usd_per_10g = india_usd_per_gram * 10
 
     delta_pct = ((us_usd_per_gram - india_usd_per_gram) / india_usd_per_gram) * 100.0
 
@@ -129,8 +139,12 @@ def compute_verdict(
 
     return {
         "us_usd_per_gram": round(us_usd_per_gram, 2),
+        "us_usd_per_10g": round(us_usd_per_10g, 2),
+        "us_inr_per_10g": round(us_inr_per_10g, 2),
         "india_usd_per_gram": round(india_usd_per_gram, 2),
         "india_inr_per_gram": round(india_inr_per_gram, 2),
+        "india_usd_per_10g": round(india_usd_per_10g, 2),
+        "india_inr_per_10g": round(india_inr_per_10g, 2),
         "delta_pct": round(delta_pct, 2),
         "verdict": verdict,
         "verdict_human": verdict_human,
@@ -157,8 +171,10 @@ def maybe_notify(
         f"Was: <b>${last_us_price:,.2f}</b> → Now: <b>${us_price_usd:,.2f}</b> "
         f"({diff_pct:+.2f}%, -${dollar_drop:,.2f})\n\n"
         f"vs India: {verdict_data['verdict_human']}\n"
-        f"• US: ${verdict_data['us_usd_per_gram']}/g\n"
-        f"• India: ${verdict_data['india_usd_per_gram']}/g (incl. 3% GST)"
+        f"• US: ${verdict_data['us_usd_per_10g']:,.2f} / 10g "
+        f"(≈ ₹{verdict_data['us_inr_per_10g']:,.0f})\n"
+        f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} / 10g "
+        f"(≈ ${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)"
     )
 
     try:
