@@ -3,7 +3,14 @@ name: Fetch gold prices
 on:
   schedule:
     - cron: "17 */2 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      test_notify:
+        description: "Send a test Telegram message and exit (verifies bot setup)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
   push:
     branches: [main]
     paths:
@@ -42,6 +49,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_NOTIFY: ${{ inputs.test_notify }}
           COSTCO_PRODUCT_URL: ${{ vars.COSTCO_PRODUCT_URL }}
           COSTCO_SKU_GRAMS: ${{ vars.COSTCO_SKU_GRAMS }}
           JMBULLION_CATEGORY_URL: ${{ vars.JMBULLION_CATEGORY_URL }}

@@ -179,7 +179,31 @@ def write_data_file(payload: dict) -> None:
         json.dump(payload, f, indent=2)
 
 
+def send_test_notification() -> int:
+    """Send a one-off Telegram ping to verify the bot setup is wired correctly."""
+    print("[test-notify] sending test message...")
+    try:
+        notifier = get_default_notifier()
+        notifier.send(
+            "✅ <b>Gold tracker: test message</b>\n"
+            f"Sent at {_utcnow_iso()}\n"
+            "If you see this, your Telegram bot is wired up correctly. "
+            "Real alerts will fire on price drops ≥ the configured threshold."
+        )
+        print("[test-notify] OK — check Telegram.")
+        return 0
+    except NotifierNotConfigured as e:
+        print(f"[test-notify] FAILED: {e}")
+        return 2
+    except Exception as e:
+        print(f"[test-notify] FAILED: {e}")
+        return 3
+
+
 def main() -> int:
+    if os.environ.get("TEST_NOTIFY", "").lower() == "true":
+        return send_test_notification()
+
     print(f"[main] run started @ {_utcnow_iso()}")
 
     errors: List[str] = []
