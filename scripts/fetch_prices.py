@@ -136,12 +136,25 @@ def compute_verdict(
 
     delta_pct = ((us_usd_per_gram - india_usd_per_gram) / india_usd_per_gram) * 100.0
 
+    # Absolute savings / premium per 10g, sign-carrying.
+    # Positive = buying in India would save that much; Negative = US is cheaper by that much.
+    diff_usd_per_10g = us_usd_per_10g - india_usd_per_10g
+    diff_inr_per_10g = us_inr_per_10g - india_inr_per_10g
+    abs_usd = abs(diff_usd_per_10g)
+    abs_inr = abs(diff_inr_per_10g)
+
     if delta_pct < -0.1:
         verdict = "BUY_IN_US"
-        verdict_human = f"US is {abs(delta_pct):.2f}% cheaper than India"
+        verdict_human = (
+            f"US is {abs(delta_pct):.2f}% cheaper than India "
+            f"(save ${abs_usd:,.2f} / ₹{abs_inr:,.0f} per 10g)"
+        )
     elif delta_pct > 0.1:
         verdict = "BUY_IN_INDIA"
-        verdict_human = f"India is {delta_pct:.2f}% cheaper than US"
+        verdict_human = (
+            f"India is {delta_pct:.2f}% cheaper than US "
+            f"(save ${abs_usd:,.2f} / ₹{abs_inr:,.0f} per 10g)"
+        )
     else:
         verdict = "NEUTRAL"
         verdict_human = "US and India are roughly equivalent"
@@ -157,6 +170,10 @@ def compute_verdict(
         "india_usd_per_10g": round(india_usd_per_10g, 2),
         "india_inr_per_10g": round(india_inr_per_10g, 2),
         "delta_pct": round(delta_pct, 2),
+        "diff_usd_per_10g": round(diff_usd_per_10g, 2),
+        "diff_inr_per_10g": round(diff_inr_per_10g, 2),
+        "abs_diff_usd_per_10g": round(abs_usd, 2),
+        "abs_diff_inr_per_10g": round(abs_inr, 2),
         "verdict": verdict,
         "verdict_human": verdict_human,
     }
@@ -181,11 +198,15 @@ def maybe_notify(
         f"Source: {us_source.upper()}\n"
         f"Was: <b>${last_us_price:,.2f}</b> → Now: <b>${us_price_usd:,.2f}</b> "
         f"({diff_pct:+.2f}%, -${dollar_drop:,.2f})\n\n"
-        f"vs India: {verdict_data['verdict_human']}\n"
-        f"• US: ${verdict_data['us_usd_per_10g']:,.2f} / 10g "
+        f"<b>vs India (per 10g, all-in):</b>\n"
+        f"• US: ${verdict_data['us_usd_per_10g']:,.2f} "
         f"(≈ ₹{verdict_data['us_inr_per_10g']:,.0f})\n"
-        f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} / 10g "
-        f"(≈ ${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)"
+        f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} "
+        f"(≈ ${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)\n"
+        f"• Diff: <b>${verdict_data['abs_diff_usd_per_10g']:,.2f} / "
+        f"₹{verdict_data['abs_diff_inr_per_10g']:,.0f}</b> "
+        f"({verdict_data['delta_pct']:+.2f}%)\n\n"
+        f"→ {verdict_data['verdict_human']}"
     )
 
     try:
