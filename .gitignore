@@ -19,3 +19,9 @@ _bmad/
 
 # Local launchd runtime logs
 logs/
+
+# Local debug / throwaway scripts that may contain secrets
+testTelegram.sh
+test_*.sh
+scratch/
+
