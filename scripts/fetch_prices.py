@@ -25,6 +25,7 @@ from scripts.config import (
     DATA_FILE,
     INDIA_GST_RATE,
     PRICE_DROP_THRESHOLD_PCT,
+    US_SALES_TAX_RATE,
 )
 from scripts.notifier import NotifierNotConfigured, get_default_notifier
 from scripts.sources.costco import (
@@ -108,14 +109,22 @@ def compute_verdict(
     spot_usd_per_oz: float,
     usd_inr: float,
     gst_rate: float,
+    us_sales_tax_rate: float = 0.0,
 ) -> dict:
     """All-in per-unit normalization for side-by-side comparison.
+
+    Both sides are computed as **final buying price** — the number you'd
+    actually pay at checkout:
+      - US: retail bar price × (1 + sales tax). Defaults to 0% since most
+        states exempt investment-grade bullion; override via US_SALES_TAX_RATE.
+      - India: spot-derived × (1 + GST). GST defaults to 3%.
 
     Indian market convention: prices are quoted per 10 grams (MCX, jewelers,
     news headlines). We surface that explicitly; per-gram retained for
     backward compatibility and finer-grained comparisons.
     """
-    us_usd_per_gram = us_price_usd / us_grams
+    us_price_all_in = us_price_usd * (1 + us_sales_tax_rate)
+    us_usd_per_gram = us_price_all_in / us_grams
     us_usd_per_10g = us_usd_per_gram * 10
     us_inr_per_10g = us_usd_per_10g * usd_inr
 
@@ -138,9 +147,11 @@ def compute_verdict(
         verdict_human = "US and India are roughly equivalent"
 
     return {
+        "us_price_all_in_usd": round(us_price_all_in, 2),
         "us_usd_per_gram": round(us_usd_per_gram, 2),
         "us_usd_per_10g": round(us_usd_per_10g, 2),
         "us_inr_per_10g": round(us_inr_per_10g, 2),
+        "us_sales_tax_rate": us_sales_tax_rate,
         "india_usd_per_gram": round(india_usd_per_gram, 2),
         "india_inr_per_gram": round(india_inr_per_gram, 2),
         "india_usd_per_10g": round(india_usd_per_10g, 2),
@@ -265,6 +276,7 @@ def main() -> int:
         spot_usd_per_oz=spot,
         usd_inr=usd_inr,
         gst_rate=INDIA_GST_RATE,
+        us_sales_tax_rate=US_SALES_TAX_RATE,
     )
 
     state = load_state()

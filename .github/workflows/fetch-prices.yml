@@ -54,6 +54,7 @@ jobs:
           COSTCO_SKU_GRAMS: ${{ vars.COSTCO_SKU_GRAMS }}
           JMBULLION_CATEGORY_URL: ${{ vars.JMBULLION_CATEGORY_URL }}
           US_RETAIL_PREMIUM_RATE: ${{ vars.US_RETAIL_PREMIUM_RATE }}
+          US_SALES_TAX_RATE: ${{ vars.US_SALES_TAX_RATE }}
           INDIA_GST_RATE: ${{ vars.INDIA_GST_RATE }}
           PRICE_DROP_THRESHOLD_PCT: ${{ vars.PRICE_DROP_THRESHOLD_PCT }}
         run: python -m scripts.fetch_prices

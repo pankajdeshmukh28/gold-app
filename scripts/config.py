@@ -36,6 +36,10 @@ JMBULLION_CATEGORY_URL = _env_str(
 
 US_RETAIL_PREMIUM_RATE = _env_float("US_RETAIL_PREMIUM_RATE", 0.03)
 
+# Most US states exempt investment-grade bullion (1oz+ gold bars). Leave at 0
+# unless your state taxes bullion. Set via repo variable US_SALES_TAX_RATE.
+US_SALES_TAX_RATE = _env_float("US_SALES_TAX_RATE", 0.0)
+
 INDIA_GST_RATE = _env_float("INDIA_GST_RATE", 0.03)
 
 PRICE_DROP_THRESHOLD_PCT = _env_float("PRICE_DROP_THRESHOLD_PCT", 0.5)

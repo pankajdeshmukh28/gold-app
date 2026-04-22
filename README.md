@@ -128,27 +128,85 @@ cd docs && python3 -m http.server 8080
 
 ---
 
+## Optional: Real Costco pricing (local Mac + Playwright)
+
+Costco is protected by Akamai Bot Manager, which blocks GitHub Actions IPs reliably. To get **actual Costco** prices (instead of the JM Bullion fallback), run a lightweight Playwright fetcher locally on your Mac via `launchd`. Your residential IP + a real Chromium instance beats Akamai consistently.
+
+This is **purely additive** — the main cron workflow still drives the dashboard verdict and Telegram alerts. The Costco card appears on the dashboard only when `docs/costco.json` exists and is fresh (< 24h).
+
+### One-time setup
+
+```bash
+cd /Users/pankajdeshmukh/workspace/gold-app
+
+# Install Playwright + chromium (adds ~200MB to the repo's venv, not the repo itself)
+.venv/bin/pip install -r requirements-local.txt
+.venv/bin/playwright install chromium
+
+# Verify it actually works before scheduling
+.venv/bin/python -m scripts.fetch_costco_pw
+# On success you'll see: [costco-pw] OK $XXXX.XX (...) -> docs/costco.json
+
+# Install the launchd agent (runs every 30 min while your Mac is awake)
+bash launchd/install.sh
+```
+
+### Monitor
+
+```bash
+tail -f logs/costco.out.log    # normal output
+tail -f logs/costco.err.log    # errors (also shows if Akamai blocked)
+launchctl list | grep gold     # verify the agent is loaded
+```
+
+### Uninstall
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.gold-app.costco.plist
+rm ~/Library/LaunchAgents/com.gold-app.costco.plist
+```
+
+### If Playwright gets blocked
+
+Run once with a visible browser to solve any CAPTCHA manually — Akamai usually calms down after seeing a real human click:
+
+```bash
+COSTCO_PW_HEADFUL=true .venv/bin/python -m scripts.fetch_costco_pw
+```
+
+The cookies set during that session persist in Chromium's default profile and subsequent headless runs inherit the good reputation score.
+
+---
+
 ## Project Structure
 
 ```
 gold-app/
 ├── .github/workflows/fetch-prices.yml  # cron + commit workflow
 ├── scripts/
-│   ├── fetch_prices.py    # entry point
-│   ├── config.py          # all tunables (env-driven)
-│   ├── notifier.py        # Telegram impl
-│   ├── state.py           # last price + history persistence
+│   ├── fetch_prices.py      # main cron entry point
+│   ├── fetch_costco_pw.py   # local-only Costco Playwright fetcher
+│   ├── run_costco_local.sh  # launchd wrapper (pull, fetch, commit, push)
+│   ├── config.py            # all tunables (env-driven)
+│   ├── notifier.py          # Telegram impl
+│   ├── state.py             # last price + history persistence
 │   └── sources/
-│       ├── fx.py          # USD→INR
-│       ├── gold_spot.py   # international spot
-│       ├── costco.py      # Costco scraper (primary)
-│       └── apmex.py       # APMEX scraper (fallback)
-├── docs/                  # GitHub Pages root
-│   ├── index.html         # mobile dashboard
-│   ├── data.json          # latest reading (written by CI)
-│   ├── state.json         # drop-detection state
-│   └── history.json       # recent readings for the sparkline
-├── requirements.txt
+│       ├── fx.py              # USD→INR
+│       ├── gold_spot.py       # international spot
+│       ├── costco.py          # Costco scraper (curl_cffi; usually bot-blocked in CI)
+│       ├── jmbullion.py       # JM Bullion scraper (CI-reliable fallback)
+│       └── us_retail_estimate.py  # spot × premium (final fallback)
+├── launchd/
+│   ├── com.gold-app.costco.plist.template  # macOS launchd agent
+│   └── install.sh                          # renders + loads the agent
+├── docs/                    # GitHub Pages root
+│   ├── index.html           # mobile dashboard
+│   ├── data.json            # main verdict (written by CI)
+│   ├── costco.json          # optional, written by local Costco fetcher
+│   ├── state.json           # drop-detection state
+│   └── history.json         # recent readings for the sparkline
+├── requirements.txt         # CI deps
+├── requirements-local.txt   # CI deps + Playwright (for local only)
 └── README.md
 ```
 

@@ -16,3 +16,6 @@ env/
 # Cursor IDE + BMAD toolchain (not part of the app code)
 .cursor/
 _bmad/
+
+# Local launchd runtime logs
+logs/

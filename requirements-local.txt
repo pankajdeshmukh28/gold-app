@@ -1,0 +1,7 @@
+# Extra dependencies for the local-only Costco Playwright fetcher.
+# CI does not install these (keeps Actions runs fast).
+#
+# After installing, also run:   playwright install chromium
+
+-r requirements.txt
+playwright>=1.47,<2

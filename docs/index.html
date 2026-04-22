@@ -97,6 +97,44 @@
     .cell .sub {
       font-size: 11px; color: var(--muted); margin-top: 4px;
     }
+    .pill {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 2px 6px;
+      margin-left: 6px;
+      background: #1d3b23;
+      color: #86efac;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+    .pill-amber { background: #3a2a10; color: #fbbf24; }
+    .costco-card {
+      margin-bottom: 16px;
+      padding: 16px;
+      border-left: 3px solid #e31837;
+    }
+    .costco-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; margin-bottom: 10px;
+    }
+    .costco-label { font-weight: 600; color: var(--fg); letter-spacing: 0.02em; }
+    .costco-ago { color: var(--muted); font-size: 11px; }
+    .costco-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .costco-val {
+      font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    }
+    .costco-val-inr { color: var(--muted); font-size: 14px; }
+    .costco-foot {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted); padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .costco-foot a { color: var(--accent-amber); text-decoration: none; }
     .chart-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -175,16 +213,31 @@
 
     <div class="grid">
       <div class="cell">
-        <div class="label">US per 10g</div>
+        <div class="label">US per 10g <span class="pill">all-in</span></div>
         <div class="val" id="us-per-10g">—</div>
         <div class="sub" id="us-per-10g-inr">—</div>
-        <div class="sub" id="us-source">—</div>
+        <div class="sub" id="us-sub">—</div>
       </div>
       <div class="cell">
-        <div class="label">India per 10g (+GST)</div>
+        <div class="label">India per 10g <span class="pill">all-in</span></div>
         <div class="val" id="in-per-10g">—</div>
         <div class="sub" id="in-per-10g-usd">—</div>
         <div class="sub">incl. 3% GST</div>
+      </div>
+    </div>
+
+    <div id="costco-card" class="cell costco-card" style="display:none;">
+      <div class="costco-header">
+        <span class="costco-label">🏬 Costco <span id="costco-stale-pill" class="pill pill-amber" style="display:none;">stale</span></span>
+        <span id="costco-ago" class="costco-ago">—</span>
+      </div>
+      <div class="costco-row">
+        <div class="costco-val" id="costco-usd-10g">—</div>
+        <div class="costco-val-inr" id="costco-inr-10g">—</div>
+      </div>
+      <div class="costco-foot">
+        <span id="costco-vs-retail">—</span>
+        <a id="costco-link" href="#" target="_blank" rel="noopener">view →</a>
       </div>
     </div>
 
@@ -267,6 +320,49 @@
         history.length + ' pts · ' + relTime(history[0].t).replace(' ago', '') + ' → now';
     }
 
+    async function loadCostco(mainInputs, mainVerdict) {
+      const card = document.getElementById('costco-card');
+      try {
+        const r = await fetch('costco.json?_=' + Date.now());
+        if (!r.ok) { card.style.display = 'none'; return; }
+        const c = await r.json();
+        if (!c || !c.price_usd || !c.timestamp) { card.style.display = 'none'; return; }
+
+        const ageMs = Date.now() - new Date(c.timestamp).getTime();
+        const FRESH_CUTOFF_MS = 1000 * 60 * 60 * 24;
+        if (ageMs > FRESH_CUTOFF_MS * 3) {
+          card.style.display = 'none';
+          return;
+        }
+
+        card.style.display = 'block';
+        document.getElementById('costco-ago').textContent = 'updated ' + relTime(c.timestamp);
+
+        const stalePill = document.getElementById('costco-stale-pill');
+        stalePill.style.display = ageMs > FRESH_CUTOFF_MS ? 'inline-block' : 'none';
+
+        const usdPer10g = c.usd_per_10g != null ? c.usd_per_10g : (c.price_usd / c.grams * 10);
+        const inrPer10g = (mainInputs && mainInputs.usd_inr) ? usdPer10g * mainInputs.usd_inr : null;
+        document.getElementById('costco-usd-10g').textContent = fmt$(usdPer10g) + ' / 10g';
+        document.getElementById('costco-inr-10g').textContent = inrPer10g != null ? '≈ ' + fmtINR(inrPer10g) : '';
+
+        const retailUsdPer10g = mainVerdict && mainVerdict.us_usd_per_10g;
+        if (retailUsdPer10g) {
+          const diff = ((usdPer10g - retailUsdPer10g) / retailUsdPer10g) * 100;
+          const verb = diff < 0 ? 'cheaper' : 'pricier';
+          document.getElementById('costco-vs-retail').textContent =
+            Math.abs(diff).toFixed(2) + '% ' + verb + ' than ' + (mainInputs.us_source || 'retail').toUpperCase();
+        } else {
+          document.getElementById('costco-vs-retail').textContent = '';
+        }
+
+        const link = document.getElementById('costco-link');
+        link.href = c.url || '#';
+      } catch (_) {
+        card.style.display = 'none';
+      }
+    }
+
     async function load() {
       try {
         const r = await fetch('data.json?_=' + Date.now());
@@ -303,7 +399,10 @@
         document.getElementById('in-per-10g-usd').textContent = '≈ ' + fmt$(v.india_usd_per_10g);
 
         const inputs = data.inputs || {};
-        document.getElementById('us-source').textContent = (inputs.us_source || '').toUpperCase();
+        const taxRate = v.us_sales_tax_rate || 0;
+        const srcLabel = (inputs.us_source || '').toUpperCase();
+        const taxLabel = taxRate > 0 ? ` · incl. ${(taxRate * 100).toFixed(2)}% tax` : ' · no bullion tax';
+        document.getElementById('us-sub').textContent = srcLabel + taxLabel;
         document.getElementById('spot').textContent = fmt$(inputs.spot_usd_per_oz) + '/oz';
         document.getElementById('fx').textContent = '₹' + fmtNum(inputs.usd_inr, 2);
         document.getElementById('us-price').textContent = fmt$(inputs.us_price_usd);
@@ -324,6 +423,8 @@
           const hr = await fetch('history.json?_=' + Date.now());
           if (hr.ok) renderSpark(await hr.json());
         } catch (_) {}
+
+        await loadCostco(inputs, v);
       } catch (e) {
         setStatus('error', e.message);
         const eb = document.getElementById('error-banner');
