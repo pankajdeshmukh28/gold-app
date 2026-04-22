@@ -65,24 +65,30 @@
       font-size: 15px; font-weight: 500; color: var(--muted);
       margin-bottom: 4px;
     }
-    .delta {
-      font-size: 52px; font-weight: 700; letter-spacing: -0.04em;
+    .savings-hero {
+      font-size: 54px; font-weight: 700; letter-spacing: -0.04em;
       line-height: 1;
-      margin: 8px 0 4px;
+      margin: 10px 0 2px;
+      font-variant-numeric: tabular-nums;
     }
-    .delta.buy-us { color: var(--accent-green); }
-    .delta.buy-in { color: var(--accent-red); }
-    .delta.neutral { color: var(--muted); }
-    .savings {
-      font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums;
-      color: var(--fg); margin-top: 10px;
-      letter-spacing: -0.01em;
+    .savings-hero.buy-us { color: var(--accent-green); }
+    .savings-hero.buy-in { color: var(--accent-red); }
+    .savings-hero.neutral { color: var(--muted); font-size: 22px; letter-spacing: -0.01em; }
+    .savings-unit {
+      font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.14em;
+      margin-bottom: 8px;
     }
-    .savings.buy-us { color: var(--accent-green); }
-    .savings.buy-in { color: var(--accent-red); }
-    .savings:empty { display: none; }
+    .savings-meta {
+      font-size: 13px; font-weight: 500;
+      color: var(--fg); opacity: 0.85;
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+    .savings-meta .pct { color: var(--muted); }
+    .savings-meta:empty { display: none; }
     .verdict-sub {
-      font-size: 12px; color: var(--muted); margin-top: 10px;
+      font-size: 12px; color: var(--muted); margin-top: 12px;
       line-height: 1.4;
     }
     .grid {
@@ -216,8 +222,9 @@
     <div class="verdict-card">
       <div class="verdict-label">Verdict</div>
       <div class="verdict-big" id="verdict-big">—</div>
-      <div class="delta" id="delta">—</div>
-      <div class="savings" id="savings"></div>
+      <div class="savings-hero" id="savings-hero">—</div>
+      <div class="savings-unit" id="savings-unit">per 10g</div>
+      <div class="savings-meta" id="savings-meta">—</div>
       <div class="verdict-sub" id="verdict-sub">—</div>
     </div>
 
@@ -396,23 +403,31 @@
           v.verdict === 'BUY_IN_INDIA' ? 'Cheaper in India' :
           v.verdict === 'NEUTRAL' ? 'Roughly equivalent' : '—';
 
-        const deltaEl = document.getElementById('delta');
         const dp = v.delta_pct;
         const cls = dp < -0.1 ? 'buy-us' : dp > 0.1 ? 'buy-in' : 'neutral';
-        deltaEl.textContent = fmtPct(dp);
-        deltaEl.className = 'delta ' + cls;
 
-        const savingsEl = document.getElementById('savings');
-        if (cls === 'neutral' || v.abs_diff_usd_per_10g == null) {
-          savingsEl.textContent = '';
-          savingsEl.className = 'savings';
+        const heroEl = document.getElementById('savings-hero');
+        const unitEl = document.getElementById('savings-unit');
+        const metaEl = document.getElementById('savings-meta');
+        const subEl = document.getElementById('verdict-sub');
+
+        heroEl.className = 'savings-hero ' + cls;
+
+        if (cls === 'neutral' || v.abs_diff_inr_per_10g == null) {
+          heroEl.textContent = 'No meaningful gap';
+          unitEl.textContent = '';
+          metaEl.textContent = '';
+          subEl.textContent = 'US and India are within ±0.1% right now.';
         } else {
-          savingsEl.textContent =
-            'Save ' + fmt$(v.abs_diff_usd_per_10g) + ' / ' + fmtINR(v.abs_diff_inr_per_10g) + ' per 10g';
-          savingsEl.className = 'savings ' + cls;
+          heroEl.textContent = fmtINR(v.abs_diff_inr_per_10g);
+          unitEl.textContent = 'saved per 10g';
+          metaEl.innerHTML =
+            '≈ ' + fmt$(v.abs_diff_usd_per_10g) +
+            ' <span class="pct">· ' + fmtPct(dp) + '</span>';
+          subEl.textContent = cls === 'buy-us'
+            ? 'if you buy in the US instead of India · per 10g · all-in'
+            : 'if you buy in India instead of the US · per 10g · all-in';
         }
-
-        document.getElementById('verdict-sub').textContent = v.verdict_human || '';
 
         document.getElementById('us-per-10g').textContent = fmt$(v.us_usd_per_10g);
         document.getElementById('us-per-10g-inr').textContent = '≈ ' + fmtINR(v.us_inr_per_10g);

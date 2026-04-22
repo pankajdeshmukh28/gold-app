@@ -193,20 +193,33 @@ def maybe_notify(
         return None
 
     dollar_drop = last_us_price - us_price_usd
+    verdict = verdict_data["verdict"]
+    if verdict == "BUY_IN_US":
+        buy_where = "US"
+    elif verdict == "BUY_IN_INDIA":
+        buy_where = "India"
+    else:
+        buy_where = None
+
+    headline = (
+        f"💰 <b>Save ₹{verdict_data['abs_diff_inr_per_10g']:,.0f}</b> "
+        f"(≈ ${verdict_data['abs_diff_usd_per_10g']:,.2f}) per 10g by buying in <b>{buy_where}</b>"
+        if buy_where
+        else "⚖️ US and India roughly equivalent right now"
+    )
+
     msg = (
         f"🟢 <b>Gold price drop detected</b>\n"
         f"Source: {us_source.upper()}\n"
         f"Was: <b>${last_us_price:,.2f}</b> → Now: <b>${us_price_usd:,.2f}</b> "
         f"({diff_pct:+.2f}%, -${dollar_drop:,.2f})\n\n"
-        f"<b>vs India (per 10g, all-in):</b>\n"
+        f"{headline}\n"
+        f"<i>({verdict_data['delta_pct']:+.2f}%, per 10g, all-in)</i>\n\n"
+        f"<b>Breakdown:</b>\n"
         f"• US: ${verdict_data['us_usd_per_10g']:,.2f} "
         f"(≈ ₹{verdict_data['us_inr_per_10g']:,.0f})\n"
         f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} "
-        f"(≈ ${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)\n"
-        f"• Diff: <b>${verdict_data['abs_diff_usd_per_10g']:,.2f} / "
-        f"₹{verdict_data['abs_diff_inr_per_10g']:,.0f}</b> "
-        f"({verdict_data['delta_pct']:+.2f}%)\n\n"
-        f"→ {verdict_data['verdict_human']}"
+        f"(≈ ${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)"
     )
 
     try:
