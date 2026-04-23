@@ -36,6 +36,19 @@ def update_last_us_price(state: dict, price: float) -> None:
     state["last_updated"] = _utcnow_iso()
 
 
+def get_last_savings_inr(state: dict) -> Optional[float]:
+    """Last observed 'buying-in-US savings' in INR per 10g.
+    Positive = US was cheaper; negative = India was cheaper.
+    """
+    val = state.get("last_savings_inr_per_10g")
+    return None if val is None else float(val)
+
+
+def update_last_savings_inr(state: dict, savings_inr_per_10g: float) -> None:
+    state["last_savings_inr_per_10g"] = float(savings_inr_per_10g)
+    state["last_updated"] = _utcnow_iso()
+
+
 def load_history() -> list:
     if not os.path.exists(HISTORY_FILE):
         return []

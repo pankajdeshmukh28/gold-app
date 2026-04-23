@@ -6,7 +6,7 @@ A tiny personal app that answers: *"Should I buy gold at Costco today, or is it 
 - Fetches **international gold spot** + **USD→INR** rate
 - Computes **India per-gram price** with **3% GST**
 - Publishes a **mobile-friendly dashboard** on GitHub Pages
-- Sends a **Telegram notification** when the US price drops
+- Sends a **Telegram notification** when the US-vs-India savings grow (i.e. a better moment to buy)
 
 Everything runs on free infrastructure: GitHub Actions runs a cron every 2 hours, writes `docs/data.json`, and GitHub Pages serves the dashboard. No servers, no database, no hosting bills.
 
@@ -81,7 +81,7 @@ On your new repo, go to **Settings → Secrets and variables → Actions**.
 | `COSTCO_SKU_GRAMS` | `31.1035` | grams in the SKU (31.1035 = 1 troy oz) |
 | `APMEX_FALLBACK_URL` | (a 1-oz PAMP Suisse APMEX page) | used when Costco is unavailable |
 | `INDIA_GST_RATE` | `0.03` | 3% GST on gold |
-| `PRICE_DROP_THRESHOLD_PCT` | `0.5` | notify only if US price drops by ≥ 0.5% |
+| `SAVINGS_INCREASE_THRESHOLD_INR` | `500` | notify only if the buying-in-US savings grew by ≥ ₹500/10g since last run |
 
 ### 4. Enable GitHub Pages
 
@@ -101,7 +101,7 @@ Then **Actions → Fetch gold prices → Run workflow** (manual dispatch). After
 - The dashboard URL should show real numbers
 - No Telegram message yet (first run — no previous price to compare)
 
-From then on, the cron runs every 2 hours. If the US price drops ≥ 0.5% between runs, you'll get a Telegram message.
+From then on, the cron runs every 2 hours. If the **buying-in-US savings** increase by ≥ ₹500/10g between runs (i.e. the US-over-India gap widened in your favour), you'll get a Telegram message. Direction matters — we stay quiet when the gap shrinks or when US gets more expensive, since those aren't "go buy now" signals.
 
 ---
 
@@ -237,7 +237,8 @@ Most things are tunable without code changes:
 |---|---|
 | Track a different Costco SKU | Set `COSTCO_PRODUCT_URL` + `COSTCO_SKU_GRAMS` in GH Actions variables |
 | Change cron cadence | Edit `.github/workflows/fetch-prices.yml`, line `cron: "17 */2 * * *"` (currently every 2h, offset by 17 min) |
-| Quieter notifications | Raise `PRICE_DROP_THRESHOLD_PCT` (e.g. `1.0` for ≥1% drops only) |
+| Quieter notifications | Raise `SAVINGS_INCREASE_THRESHOLD_INR` (e.g. `1000` for ≥₹1,000/10g improvements only) |
+| Louder notifications | Lower `SAVINGS_INCREASE_THRESHOLD_INR` (e.g. `250` — you'll get pinged more often) |
 | Different GST | Set `INDIA_GST_RATE` (e.g. `0.05`) |
 | Swap notifier channel | Subclass `Notifier` in `scripts/notifier.py`, return your impl from `get_default_notifier()` |
 
@@ -255,7 +256,7 @@ Costco returned a login wall or the scraper couldn't find the price. APMEX is se
 Check:
 1. Bot token and chat ID are set as GH Secrets (not Variables).
 2. You sent the bot at least one message from your account (bots can't DM users who haven't initiated).
-3. `PRICE_DROP_THRESHOLD_PCT` isn't too high — try lowering to `0.1` temporarily to force a test notification.
+3. `SAVINGS_INCREASE_THRESHOLD_INR` isn't too high — try lowering to `1` temporarily (or trigger the workflow manually with `test_notify=true` to verify wiring without waiting for a market move).
 4. Run the workflow manually; in the Actions log, look for `[notify] sent drop alert` vs `[notify] skipped`.
 
 **Actions job fails on "git push"**  

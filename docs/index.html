@@ -292,6 +292,7 @@
       <div class="row"><span class="k">US bar price</span><span class="v" id="us-price">—</span></div>
       <div class="row"><span class="k">SKU size</span><span class="v" id="us-grams">—</span></div>
       <div class="row"><span class="k">India 999 base</span><span class="v" id="india-base">—</span></div>
+      <div class="row"><span class="k">Savings vs last check</span><span class="v" id="savings-delta">—</span></div>
       <div class="row"><span class="k">Last check</span><span class="v" id="ts">—</span></div>
     </div>
 
@@ -490,6 +491,22 @@
         } else {
           document.getElementById('india-base').textContent = '—';
         }
+
+        const savingsNow = data.savings_inr_per_10g;
+        const savingsLast = data.last_savings_inr_seen;
+        const savingsEl = document.getElementById('savings-delta');
+        if (savingsNow != null && savingsLast != null) {
+          const delta = savingsNow - savingsLast;
+          const sign = delta > 0 ? '+' : (delta < 0 ? '−' : '');
+          savingsEl.textContent = sign + '₹' +
+            Math.abs(Math.round(delta)).toLocaleString('en-IN') + '/10g';
+          savingsEl.style.color = delta > 0 ? 'var(--accent-green)'
+            : delta < 0 ? 'var(--accent-red)' : '';
+        } else {
+          savingsEl.textContent = 'first check — no prior';
+          savingsEl.style.color = '';
+        }
+
         document.getElementById('ts').textContent = relTime(data.timestamp);
 
         const link = document.getElementById('src-link');

@@ -72,7 +72,7 @@ jobs:
           US_RETAIL_PREMIUM_RATE: ${{ vars.US_RETAIL_PREMIUM_RATE }}
           US_SALES_TAX_RATE: ${{ vars.US_SALES_TAX_RATE }}
           INDIA_GST_RATE: ${{ vars.INDIA_GST_RATE }}
-          PRICE_DROP_THRESHOLD_PCT: ${{ vars.PRICE_DROP_THRESHOLD_PCT }}
+          SAVINGS_INCREASE_THRESHOLD_INR: ${{ vars.SAVINGS_INCREASE_THRESHOLD_INR }}
         run: python -m scripts.fetch_prices
 
       - name: Commit data changes

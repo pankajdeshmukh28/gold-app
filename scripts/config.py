@@ -42,7 +42,10 @@ US_SALES_TAX_RATE = _env_float("US_SALES_TAX_RATE", 0.0)
 
 INDIA_GST_RATE = _env_float("INDIA_GST_RATE", 0.03)
 
-PRICE_DROP_THRESHOLD_PCT = _env_float("PRICE_DROP_THRESHOLD_PCT", 0.5)
+# Minimum INR/10g increase in "buying-in-US savings" between runs to trigger
+# a Telegram alert. Default: ₹500/10g. Raise it (e.g. 1000) if you want fewer
+# pings; lower it (e.g. 250) for more.
+SAVINGS_INCREASE_THRESHOLD_INR = _env_float("SAVINGS_INCREASE_THRESHOLD_INR", 500.0)
 
 DATA_FILE = _env_str("DATA_FILE", "docs/data.json")
 STATE_FILE = _env_str("STATE_FILE", "docs/state.json")
