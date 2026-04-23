@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-04-23T06:52:09+00:00",
+  "timestamp": "2026-04-23T07:10:21+00:00",
   "status": "ok",
   "inputs": {
-    "spot_usd_per_oz": 4719.8,
+    "spot_usd_per_oz": 4713.4,
     "usd_inr": 93.8602,
-    "us_price_usd": 4829.79,
+    "us_price_usd": 4825.66,
     "us_source": "jmbullion",
     "us_url": "https://www.jmbullion.com/1-oz-gold-bar-secondary-market/",
     "us_grams": 31.1035,
@@ -18,23 +18,26 @@
     "india_notes": "IBJA 999 benchmark (PM, 22/04/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
-    "us_price_all_in_usd": 4829.79,
-    "us_usd_per_gram": 155.28,
-    "us_usd_per_10g": 1552.81,
-    "us_inr_per_10g": 145747.22,
+    "us_price_all_in_usd": 4825.66,
+    "us_usd_per_gram": 155.15,
+    "us_usd_per_10g": 1551.48,
+    "us_inr_per_10g": 145622.59,
     "us_sales_tax_rate": 0.0,
     "india_usd_per_gram": 166.93,
     "india_inr_per_gram": 15667.95,
     "india_usd_per_10g": 1669.29,
     "india_inr_per_10g": 156679.48,
-    "delta_pct": -6.98,
-    "diff_usd_per_10g": -116.47,
-    "diff_inr_per_10g": -10932.26,
-    "abs_diff_usd_per_10g": 116.47,
-    "abs_diff_inr_per_10g": 10932.26,
+    "delta_pct": -7.06,
+    "diff_usd_per_10g": -117.8,
+    "diff_inr_per_10g": -11056.89,
+    "abs_diff_usd_per_10g": 117.8,
+    "abs_diff_inr_per_10g": 11056.89,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b910,932 (\u2248 $116.47) per 10g buying in US vs India [6.98%]"
+    "verdict_human": "Save \u20b911,057 (\u2248 $117.80) per 10g buying in US vs India [7.06%]"
   },
+  "savings_inr_per_10g": 11056.89,
   "alert_sent": false,
-  "last_us_price_seen": 4827.02
+  "last_us_price_seen": 4829.79,
+  "last_savings_inr_seen": null,
+  "savings_increase_threshold_inr": 500.0
 }
