@@ -32,8 +32,34 @@ class TelegramNotifier(Notifier):
             "parse_mode": "HTML",
             "disable_web_page_preview": True,
         }
-        r = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
-        r.raise_for_status()
+        try:
+            r = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
+        except Exception as e:
+            raise RuntimeError(f"Telegram request failed (network): {e}") from e
+
+        # Telegram always returns JSON with an `ok` field. If the call
+        # failed, surface Telegram's own description so we don't have to
+        # guess (e.g. "chat not found", "bot was blocked by the user",
+        # "Unauthorized" from a revoked token).
+        body_preview = (r.text or "")[:400]
+        try:
+            data = r.json()
+        except Exception:
+            data = None
+
+        if r.status_code != 200 or (data and not data.get("ok", False)):
+            tg_desc = (data or {}).get("description", "(no description)")
+            tg_code = (data or {}).get("error_code", "?")
+            token_hint = (
+                f"{self.bot_token[:6]}…{self.bot_token[-4:]}"
+                if self.bot_token and len(self.bot_token) > 10
+                else "(short)"
+            )
+            raise RuntimeError(
+                f"Telegram HTTP {r.status_code} code={tg_code} "
+                f"desc={tg_desc!r} chat_id={self.chat_id!r} "
+                f"bot={token_hint} body={body_preview!r}"
+            )
 
 
 def get_default_notifier() -> Notifier:

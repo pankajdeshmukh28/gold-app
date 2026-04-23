@@ -45,6 +45,22 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Verify Telegram secrets present
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "::warning::TELEGRAM_BOT_TOKEN secret is EMPTY in this run."
+          else
+            echo "TELEGRAM_BOT_TOKEN: present (len=${#TELEGRAM_BOT_TOKEN})"
+          fi
+          if [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::TELEGRAM_CHAT_ID secret is EMPTY in this run."
+          else
+            echo "TELEGRAM_CHAT_ID: present (len=${#TELEGRAM_CHAT_ID})"
+          fi
+
       - name: Run fetch_prices.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
