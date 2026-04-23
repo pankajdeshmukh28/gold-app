@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-04-22T23:07:59+00:00",
+  "timestamp": "2026-04-23T03:48:17+00:00",
   "status": "ok",
   "inputs": {
-    "spot_usd_per_oz": 4725.2,
-    "usd_inr": 93.6058,
-    "us_price_usd": 4837.91,
+    "spot_usd_per_oz": 4707.0,
+    "usd_inr": 93.8602,
+    "us_price_usd": 4819.94,
     "us_source": "jmbullion",
     "us_url": "https://www.jmbullion.com/1-oz-gold-bar-secondary-market/",
     "us_grams": 31.1035,
@@ -12,23 +12,23 @@
     "us_notes": "Using JM Bullion 1-oz gold bar (lowest in-stock) \u2014 Costco is behind Akamai bot protection."
   },
   "verdict": {
-    "us_price_all_in_usd": 4837.91,
-    "us_usd_per_gram": 155.54,
-    "us_usd_per_10g": 1555.42,
-    "us_inr_per_10g": 145596.59,
+    "us_price_all_in_usd": 4819.94,
+    "us_usd_per_gram": 154.96,
+    "us_usd_per_10g": 1549.65,
+    "us_inr_per_10g": 145449.98,
     "us_sales_tax_rate": 0.0,
-    "india_usd_per_gram": 156.48,
-    "india_inr_per_gram": 14647.08,
-    "india_usd_per_10g": 1564.76,
-    "india_inr_per_10g": 146470.85,
-    "delta_pct": -0.6,
-    "diff_usd_per_10g": -9.34,
-    "diff_inr_per_10g": -874.25,
-    "abs_diff_usd_per_10g": 9.34,
-    "abs_diff_inr_per_10g": 874.25,
+    "india_usd_per_gram": 155.87,
+    "india_inr_per_gram": 14630.32,
+    "india_usd_per_10g": 1558.74,
+    "india_inr_per_10g": 146303.18,
+    "delta_pct": -0.58,
+    "diff_usd_per_10g": -9.09,
+    "diff_inr_per_10g": -853.2,
+    "abs_diff_usd_per_10g": 9.09,
+    "abs_diff_inr_per_10g": 853.2,
     "verdict": "BUY_IN_US",
-    "verdict_human": "US is 0.60% cheaper than India (save $9.34 / \u20b9874 per 10g)"
+    "verdict_human": "US is 0.58% cheaper than India (save $9.09 / \u20b9853 per 10g)"
   },
   "alert_sent": false,
-  "last_us_price_seen": 4853.5
+  "last_us_price_seen": 4837.91
 }
