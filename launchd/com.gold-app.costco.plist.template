@@ -11,12 +11,20 @@
         <string>__REPO_PATH__/scripts/run_costco_local.sh</string>
     </array>
 
-    <!-- Run once at load, then every 1800s (30 min). If Mac is asleep, launchd
-         fires the missed run as soon as it wakes up. -->
+    <!-- Run once when the agent is loaded (or Mac is rebooted), then once
+         per day at 09:15 local time. Gold retail prices don't flip minute-
+         to-minute, so a daily snapshot is plenty for a directional tool.
+         If the Mac is asleep at 09:15, launchd fires the missed run once
+         as soon as the Mac wakes. -->
     <key>RunAtLoad</key>
     <true/>
-    <key>StartInterval</key>
-    <integer>1800</integer>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>15</integer>
+    </dict>
 
     <key>WorkingDirectory</key>
     <string>__REPO_PATH__</string>

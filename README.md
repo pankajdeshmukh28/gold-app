@@ -148,7 +148,7 @@ cd /Users/pankajdeshmukh/workspace/gold-app
 .venv/bin/python -m scripts.fetch_costco_pw
 # On success you'll see: [costco-pw] OK $XXXX.XX (...) -> docs/costco.json
 
-# Install the launchd agent (runs every 30 min while your Mac is awake)
+# Install the launchd agent (runs once per day at 09:15 local; on first load too)
 bash launchd/install.sh
 ```
 
