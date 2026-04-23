@@ -34,6 +34,7 @@ from scripts.sources.costco import (
     CostcoLoginWall,
     fetch_costco_price,
 )
+from scripts.sources.ibja import IbjaFetchError, IbjaRate, fetch_ibja_999
 from scripts.sources.jmbullion import JmbullionFetchError, fetch_jmbullion_price
 from scripts.sources.fx import FxError, fetch_usd_inr
 from scripts.sources.gold_spot import (
@@ -103,21 +104,66 @@ def fetch_us_price(spot_usd_per_oz: float) -> dict:
     }
 
 
+def fetch_india_price(spot_usd_per_oz: float, usd_inr: float) -> dict:
+    """Resolve India retail gold price per 10g, pre-GST.
+
+    Tier 1: IBJA (Indian Bullion & Jewellers Association) 999 rate — the
+      published benchmark Indian jewelers actually use. This reflects real
+      Indian market dynamics (import duty, local demand premium) baked in.
+    Tier 2: Spot × FX estimate — a crude fallback that ignores the Indian
+      market premium and will underestimate actual retail by ~10-20%.
+    """
+    try:
+        ibja = fetch_ibja_999()
+        print(
+            f"[india_price] IBJA 999 {ibja.session} "
+            f"{ibja.date_str}: ₹{ibja.rate_inr_per_10g:,.0f}/10g (pre-GST)"
+        )
+        return {
+            "inr_per_10g_pre_gst": ibja.rate_inr_per_10g,
+            "source": "ibja",
+            "url": ibja.source_url,
+            "date": ibja.date_str,
+            "session": ibja.session,
+            "notes": (
+                f"IBJA 999 benchmark ({ibja.session}, {ibja.date_str}). "
+                "Reflects real Indian retail market (import duty + local premium baked in)."
+            ),
+        }
+    except IbjaFetchError as e:
+        print(f"[india_price] IBJA failed, using spot+FX estimate: {e}")
+
+    estimated_per_10g = (spot_usd_per_oz * usd_inr / TROY_OUNCE_GRAMS) * 10
+    return {
+        "inr_per_10g_pre_gst": estimated_per_10g,
+        "source": "spot_estimate",
+        "url": None,
+        "date": None,
+        "session": None,
+        "notes": (
+            "⚠ Spot × FX estimate (IBJA unreachable). Ignores Indian import duty "
+            "+ local retail premium — underestimates real buying price by ~10-20%."
+        ),
+    }
+
+
 def compute_verdict(
     us_price_usd: float,
     us_grams: float,
-    spot_usd_per_oz: float,
+    india_inr_per_10g_pre_gst: float,
     usd_inr: float,
     gst_rate: float,
     us_sales_tax_rate: float = 0.0,
 ) -> dict:
     """All-in per-unit normalization for side-by-side comparison.
 
-    Both sides are computed as **final buying price** — the number you'd
-    actually pay at checkout:
+    Both sides are computed as **final buying price in that country** — the
+    number you'd actually pay at checkout, buying locally:
       - US: retail bar price × (1 + sales tax). Defaults to 0% since most
         states exempt investment-grade bullion; override via US_SALES_TAX_RATE.
-      - India: spot-derived × (1 + GST). GST defaults to 3%.
+      - India: IBJA 999 benchmark (per 10g) × (1 + GST). GST defaults to 3%.
+        This is NOT spot+GST — IBJA already includes India's import duty and
+        local market premium.
 
     Indian market convention: prices are quoted per 10 grams (MCX, jewelers,
     news headlines). We surface that explicitly; per-gram retained for
@@ -128,10 +174,9 @@ def compute_verdict(
     us_usd_per_10g = us_usd_per_gram * 10
     us_inr_per_10g = us_usd_per_10g * usd_inr
 
-    india_inr_per_gram_pre_gst = (spot_usd_per_oz * usd_inr) / TROY_OUNCE_GRAMS
-    india_inr_per_gram = india_inr_per_gram_pre_gst * (1 + gst_rate)
+    india_inr_per_10g = india_inr_per_10g_pre_gst * (1 + gst_rate)
+    india_inr_per_gram = india_inr_per_10g / 10
     india_usd_per_gram = india_inr_per_gram / usd_inr
-    india_inr_per_10g = india_inr_per_gram * 10
     india_usd_per_10g = india_usd_per_gram * 10
 
     delta_pct = ((us_usd_per_gram - india_usd_per_gram) / india_usd_per_gram) * 100.0
@@ -146,18 +191,18 @@ def compute_verdict(
     if delta_pct < -0.1:
         verdict = "BUY_IN_US"
         verdict_human = (
-            f"US is {abs(delta_pct):.2f}% cheaper than India "
-            f"(save ${abs_usd:,.2f} / ₹{abs_inr:,.0f} per 10g)"
+            f"Save ₹{abs_inr:,.0f} (≈ ${abs_usd:,.2f}) per 10g "
+            f"buying in US vs India [{abs(delta_pct):.2f}%]"
         )
     elif delta_pct > 0.1:
         verdict = "BUY_IN_INDIA"
         verdict_human = (
-            f"India is {delta_pct:.2f}% cheaper than US "
-            f"(save ${abs_usd:,.2f} / ₹{abs_inr:,.0f} per 10g)"
+            f"Save ₹{abs_inr:,.0f} (≈ ${abs_usd:,.2f}) per 10g "
+            f"buying in India vs US [{delta_pct:.2f}%]"
         )
     else:
         verdict = "NEUTRAL"
-        verdict_human = "US and India are roughly equivalent"
+        verdict_human = "US and India are roughly equivalent (gap under ₹100/10g)"
 
     return {
         "us_price_all_in_usd": round(us_price_all_in, 2),
@@ -209,17 +254,16 @@ def maybe_notify(
     )
 
     msg = (
-        f"🟢 <b>Gold price drop detected</b>\n"
+        f"🟢 <b>Gold price drop: -${dollar_drop:,.2f}</b> "
+        f"<i>({diff_pct:+.2f}%)</i>\n"
         f"Source: {us_source.upper()}\n"
-        f"Was: <b>${last_us_price:,.2f}</b> → Now: <b>${us_price_usd:,.2f}</b> "
-        f"({diff_pct:+.2f}%, -${dollar_drop:,.2f})\n\n"
-        f"{headline}\n"
-        f"<i>({verdict_data['delta_pct']:+.2f}%, per 10g, all-in)</i>\n\n"
-        f"<b>Breakdown:</b>\n"
-        f"• US: ${verdict_data['us_usd_per_10g']:,.2f} "
-        f"(≈ ₹{verdict_data['us_inr_per_10g']:,.0f})\n"
+        f"Was <b>${last_us_price:,.2f}</b> → Now <b>${us_price_usd:,.2f}</b>\n\n"
+        f"{headline}\n\n"
+        f"<b>Breakdown (per 10g, all-in):</b>\n"
+        f"• US: ₹{verdict_data['us_inr_per_10g']:,.0f} "
+        f"(${verdict_data['us_usd_per_10g']:,.2f})\n"
         f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} "
-        f"(≈ ${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)"
+        f"(${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)"
     )
 
     try:
@@ -294,7 +338,21 @@ def main() -> int:
         us = None
         errors.append("us_price: skipped (spot unavailable)")
 
-    if not (usd_inr and spot and us):
+    if spot and usd_inr:
+        try:
+            india = fetch_india_price(spot, usd_inr)
+            print(
+                f"[main] India base = ₹{india['inr_per_10g_pre_gst']:,.0f}/10g "
+                f"pre-GST via {india['source']}"
+            )
+        except Exception as e:
+            errors.append(f"india_price: {e}")
+            india = None
+    else:
+        india = None
+        errors.append("india_price: skipped (spot or FX unavailable)")
+
+    if not (usd_inr and spot and us and india):
         payload = {
             "timestamp": _utcnow_iso(),
             "status": "error",
@@ -307,7 +365,7 @@ def main() -> int:
     verdict = compute_verdict(
         us_price_usd=us["price_usd"],
         us_grams=us["grams"],
-        spot_usd_per_oz=spot,
+        india_inr_per_10g_pre_gst=india["inr_per_10g_pre_gst"],
         usd_inr=usd_inr,
         gst_rate=INDIA_GST_RATE,
         us_sales_tax_rate=US_SALES_TAX_RATE,
@@ -331,8 +389,14 @@ def main() -> int:
             "us_source": us["source"],
             "us_url": us["url"],
             "us_grams": us["grams"],
-            "india_gst_rate": INDIA_GST_RATE,
             "us_notes": us.get("notes"),
+            "india_gst_rate": INDIA_GST_RATE,
+            "india_source": india["source"],
+            "india_url": india["url"],
+            "india_base_inr_per_10g_pre_gst": round(india["inr_per_10g_pre_gst"], 2),
+            "india_date": india.get("date"),
+            "india_session": india.get("session"),
+            "india_notes": india.get("notes"),
         },
         "verdict": verdict,
         "alert_sent": bool(alert_sent),

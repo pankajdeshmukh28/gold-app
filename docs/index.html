@@ -259,7 +259,7 @@
         <div class="label">India per 10g <span class="pill">all-in</span></div>
         <div class="val" id="in-per-10g">—</div>
         <div class="sub" id="in-per-10g-usd">—</div>
-        <div class="sub">incl. 3% GST</div>
+        <div class="sub" id="in-sub">incl. 3% GST</div>
       </div>
     </div>
 
@@ -291,6 +291,7 @@
       <div class="row"><span class="k">USD → INR</span><span class="v" id="fx">—</span></div>
       <div class="row"><span class="k">US bar price</span><span class="v" id="us-price">—</span></div>
       <div class="row"><span class="k">SKU size</span><span class="v" id="us-grams">—</span></div>
+      <div class="row"><span class="k">India 999 base</span><span class="v" id="india-base">—</span></div>
       <div class="row"><span class="k">Last check</span><span class="v" id="ts">—</span></div>
     </div>
 
@@ -385,10 +386,13 @@
 
         const retailUsdPer10g = mainVerdict && mainVerdict.us_usd_per_10g;
         if (retailUsdPer10g) {
-          const diff = ((usdPer10g - retailUsdPer10g) / retailUsdPer10g) * 100;
-          const verb = diff < 0 ? 'cheaper' : 'pricier';
+          const absDiffUsd = Math.abs(usdPer10g - retailUsdPer10g);
+          const pctDiff = Math.abs(((usdPer10g - retailUsdPer10g) / retailUsdPer10g) * 100);
+          const verb = usdPer10g < retailUsdPer10g ? 'cheaper' : 'pricier';
+          const srcName = (mainInputs.us_source || 'retail').toUpperCase();
           document.getElementById('costco-vs-retail').textContent =
-            Math.abs(diff).toFixed(2) + '% ' + verb + ' than ' + (mainInputs.us_source || 'retail').toUpperCase();
+            fmt$(absDiffUsd) + '/10g ' + verb + ' than ' + srcName +
+            ' (' + pctDiff.toFixed(1) + '%)';
         } else {
           document.getElementById('costco-vs-retail').textContent = '';
         }
@@ -459,20 +463,48 @@
         const srcLabel = (inputs.us_source || '').toUpperCase();
         const taxLabel = taxRate > 0 ? ` · incl. ${(taxRate * 100).toFixed(2)}% tax` : ' · no bullion tax';
         document.getElementById('us-sub').textContent = srcLabel + taxLabel;
+
+        const gstRate = inputs.india_gst_rate != null ? inputs.india_gst_rate : 0.03;
+        const gstLabel = 'incl. ' + (gstRate * 100).toFixed(0) + '% GST';
+        let inSubText;
+        if (inputs.india_source === 'ibja') {
+          const sess = inputs.india_session ? ' ' + inputs.india_session : '';
+          inSubText = 'IBJA 999' + sess + ' · ' + gstLabel;
+        } else if (inputs.india_source === 'spot_estimate') {
+          inSubText = 'Spot estimate · ' + gstLabel;
+        } else {
+          inSubText = gstLabel;
+        }
+        document.getElementById('in-sub').textContent = inSubText;
+
         document.getElementById('spot').textContent = fmt$(inputs.spot_usd_per_oz) + '/oz';
         document.getElementById('fx').textContent = '₹' + fmtNum(inputs.usd_inr, 2);
         document.getElementById('us-price').textContent = fmt$(inputs.us_price_usd);
         document.getElementById('us-grams').textContent = fmtNum(inputs.us_grams, 4) + ' g';
+        if (inputs.india_base_inr_per_10g_pre_gst != null) {
+          const srcTag = inputs.india_source === 'ibja'
+            ? 'IBJA' + (inputs.india_session ? ' ' + inputs.india_session : '')
+            : 'estimate';
+          document.getElementById('india-base').textContent =
+            fmtINR(inputs.india_base_inr_per_10g_pre_gst) + '/10g · ' + srcTag;
+        } else {
+          document.getElementById('india-base').textContent = '—';
+        }
         document.getElementById('ts').textContent = relTime(data.timestamp);
 
         const link = document.getElementById('src-link');
         link.href = inputs.us_url || '#';
         link.textContent = 'view ' + (inputs.us_source || 'source') + ' page';
 
-        if (inputs.us_notes) {
+        const noteParts = [];
+        if (inputs.us_notes) noteParts.push(inputs.us_notes);
+        if (inputs.india_notes && inputs.india_source !== 'ibja') {
+          noteParts.push(inputs.india_notes);
+        }
+        if (noteParts.length > 0) {
           const nb = document.getElementById('notes-banner');
           nb.style.display = 'block';
-          nb.textContent = inputs.us_notes;
+          nb.textContent = noteParts.join('  ·  ');
         }
 
         try {

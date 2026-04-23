@@ -20,7 +20,8 @@ GitHub Actions (cron every 2h)
       ├─ fetch USD→INR          (open.er-api.com — free)
       ├─ fetch gold spot USD/oz (goldprice.org — free)
       ├─ fetch US retail        (Costco → APMEX fallback)
-      ├─ compute verdict        (US $/g vs India $/g incl. 3% GST)
+      ├─ fetch IBJA 999 rate    (benchmark used by Indian jewelers; fallback: spot × FX)
+      ├─ compute verdict        (US all-in $/g vs India IBJA + 3% GST)
       ├─ write docs/data.json, docs/history.json
       └─ if drop detected → Telegram message
          │
@@ -216,12 +217,13 @@ gold-app/
 
 This is a **directional** tool — not a financial calculator. Known approximations:
 
-- **India side** is computed as `spot_usd × USDINR ÷ 31.1035 × (1 + GST)` and displayed per 10g (the Indian market convention used by MCX and jewelers). This tracks the international benchmark + GST, but **does not include** Indian local retail premiums (import duty ~10%, making charges, jeweler margin — can add 5–15% to real retail).
+- **India side** is the **IBJA 999 benchmark rate** (per 10g, published twice daily at [ibjarates.com](https://ibjarates.com/)) × `(1 + 3% GST)`. IBJA is the reference rate Indian jewelers and banks actually use — so it **already reflects** India's import duty (~10%) and local market premium. This is the price you'd pay buying gold *in India*, not the price of importing international gold into India.
+- **Why not `spot + GST`?** That formula underestimates real Indian retail by ~10–20% because it ignores local market dynamics. We fall back to it only if IBJA is unreachable (and surface a warning in the UI when we do).
 - **10g vs tola**: Modern Indian pricing uses 10 grams as the standard quote unit. The traditional "tola" is ~11.66g and still used for coins. We use 10g to match MCX / news-headline convention. If you want the traditional tola value, multiply the per-gram figures by 11.664.
-- **US side** is a retail bar price (Costco or APMEX), which already includes that retailer's premium over spot.
-- So the reported "% cheaper" leans toward **understating** how much cheaper the US really is vs. *Indian retail jewelry*, but is roughly right vs. *Indian digital gold / ETFs / coins*.
+- **US side** is a retail bar price (Costco or JM Bullion), which already includes that retailer's premium over spot.
 - **FX rate** is mid-market (no forex spread). Your actual money conversion may cost 0.5–2% more.
-- **3% GST** is a simplification of India's current gold GST (3% on jewelry, some categories differ).
+- **3% GST** is a simplification of India's current gold GST (3% on bars/coins; jewelry also has making-charge GST layered on top — we don't model jewelry).
+- **IBJA session**: we prefer the PM (closing) rate when available, fall back to AM.
 
 For personal "is it a good deal today?" signaling, this is fine. For real financial decisions, cross-check with your bank and a jeweler.
 
