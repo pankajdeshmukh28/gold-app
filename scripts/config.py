@@ -52,8 +52,52 @@ STATE_FILE = _env_str("STATE_FILE", "docs/state.json")
 HISTORY_FILE = _env_str("HISTORY_FILE", "docs/history.json")
 HISTORY_MAX_POINTS = _env_int("HISTORY_MAX_POINTS", 168)
 
+SUBSCRIBERS_FILE = _env_str("SUBSCRIBERS_FILE", "docs/subscribers.json")
+DENY_LIST_FILE = _env_str("DENY_LIST_FILE", "docs/deny_list.json")
+
 TELEGRAM_BOT_TOKEN = _env_str("TELEGRAM_BOT_TOKEN", "")
+# TELEGRAM_CHAT_ID is the "admin" chat — yours. It's always included in
+# broadcasts (safety net: even if subscribers.json is empty or corrupted
+# you still get pinged) and it's the default admin for /kick, /list, etc.
+# Additional admins can be added via ADMIN_CHAT_IDS (comma-separated).
 TELEGRAM_CHAT_ID = _env_str("TELEGRAM_CHAT_ID", "")
+_ADMIN_CHAT_IDS_RAW = _env_str("ADMIN_CHAT_IDS", "")
+
+
+def _parse_admin_ids() -> list:
+    out = []
+    if TELEGRAM_CHAT_ID:
+        try:
+            out.append(int(TELEGRAM_CHAT_ID))
+        except ValueError:
+            pass
+    for part in _ADMIN_CHAT_IDS_RAW.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            cid = int(part)
+            if cid not in out:
+                out.append(cid)
+        except ValueError:
+            pass
+    return out
+
+
+ADMIN_CHAT_IDS = _parse_admin_ids()
+
+# Broadcast fan-out: Telegram's documented limit is ~30 msgs/sec to different
+# chats. We sleep this many seconds between sends as a conservative buffer,
+# and retry on HTTP 429 with the server-provided retry_after.
+BROADCAST_SLEEP_SEC = _env_float("BROADCAST_SLEEP_SEC", 0.05)
+
+# How many Telegram updates to fetch per poll. 100 is plenty for a family
+# bot; 100 is also Telegram's default.
+TELEGRAM_UPDATES_LIMIT = _env_int("TELEGRAM_UPDATES_LIMIT", 100)
+
+# Hard cap on subscribers — safety rail against a social-media viral moment
+# that balloons your subscriber list unexpectedly. Set to 0 to disable.
+MAX_SUBSCRIBERS = _env_int("MAX_SUBSCRIBERS", 1000)
 
 REQUEST_HEADERS = {
     "User-Agent": (

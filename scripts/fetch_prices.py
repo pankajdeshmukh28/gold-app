@@ -27,7 +27,11 @@ from scripts.config import (
     SAVINGS_INCREASE_THRESHOLD_INR,
     US_SALES_TAX_RATE,
 )
-from scripts.notifier import NotifierNotConfigured, get_default_notifier
+from scripts.notifier import (
+    NotifierNotConfigured,
+    get_broadcast_notifier,
+    get_default_notifier,
+)
 from scripts.sources.costco import (
     CostcoBotBlocked,
     CostcoFetchError,
@@ -298,9 +302,13 @@ def maybe_notify(
     )
 
     try:
-        notifier = get_default_notifier()
-        notifier.send(msg)
-        print(f"[notify] sent savings-improvement alert (+₹{delta_inr:,.0f}/10g)")
+        notifier = get_broadcast_notifier()
+        result = notifier.send(msg)
+        print(
+            f"[notify] savings-improvement alert (+₹{delta_inr:,.0f}/10g) "
+            f"sent={result['sent']} failed={result['failed']} "
+            f"pruned={result['pruned']} of {result['targets']} targets"
+        )
         return msg
     except NotifierNotConfigured as e:
         print(f"[notify] skipped — {e}")
@@ -460,6 +468,8 @@ def main() -> int:
             "us": round(us["price_usd"], 2),
             "us_per_g": verdict["us_usd_per_gram"],
             "in_per_g": verdict["india_usd_per_gram"],
+            "savings_inr_per_10g": round(savings_inr_per_10g, 2),
+            "usd_inr": round(usd_inr, 4),
             "delta": verdict["delta_pct"],
             "src": us["source"],
         }

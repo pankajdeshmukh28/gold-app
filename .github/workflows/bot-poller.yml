@@ -1,0 +1,72 @@
+name: Bot command poller
+
+# Polls Telegram getUpdates every 5 min. Routes /start, /stop, /help,
+# /status, /list, /kick, /block, /unblock, /stats, /broadcast.
+# Public repo → GH Actions minutes are unlimited, so the 5-min cadence
+# is fine. GitHub may delay scheduled jobs during peak load; that's
+# just longer welcome-message lag, no correctness impact (offset is
+# persisted in state.json).
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/telegram_bot.py"
+      - "scripts/notifier.py"
+      - "scripts/state.py"
+      - "scripts/config.py"
+      - ".github/workflows/bot-poller.yml"
+
+concurrency:
+  group: bot-poller
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot poller
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ADMIN_CHAT_IDS: ${{ vars.ADMIN_CHAT_IDS }}
+          MAX_SUBSCRIBERS: ${{ vars.MAX_SUBSCRIBERS }}
+          DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
+          ADMIN_NAME: ${{ vars.ADMIN_NAME }}
+        run: python -m scripts.telegram_bot
+
+      - name: Commit subscriber changes
+        run: |
+          git config user.name "gold-app-bot"
+          git config user.email "gold-app-bot@users.noreply.github.com"
+          git add docs/subscribers.json docs/deny_list.json docs/state.json
+          if git diff --staged --quiet; then
+            echo "No subscriber changes to commit."
+          else
+            git commit -m "chore(bot): update subscribers/state at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            # Retry on push race with fetch-prices workflow (both push to main).
+            for i in 1 2 3; do
+              git pull --rebase --autostash && git push && break || sleep $((i * 5))
+            done
+          fi

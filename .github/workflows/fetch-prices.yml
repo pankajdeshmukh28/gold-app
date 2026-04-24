@@ -65,6 +65,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ADMIN_CHAT_IDS: ${{ vars.ADMIN_CHAT_IDS }}
           TEST_NOTIFY: ${{ inputs.test_notify }}
           COSTCO_PRODUCT_URL: ${{ vars.COSTCO_PRODUCT_URL }}
           COSTCO_SKU_GRAMS: ${{ vars.COSTCO_SKU_GRAMS }}
@@ -79,10 +80,14 @@ jobs:
         run: |
           git config user.name "gold-app-bot"
           git config user.email "gold-app-bot@users.noreply.github.com"
-          git add docs/data.json docs/state.json docs/history.json
+          # subscribers.json may be written by BroadcastNotifier when it
+          # auto-prunes chats that blocked the bot — include it.
+          git add docs/data.json docs/state.json docs/history.json docs/subscribers.json
           if git diff --staged --quiet; then
             echo "No data changes to commit."
           else
             git commit -m "chore(data): refresh at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase --autostash && git push && break || sleep $((i * 5))
+            done
           fi
