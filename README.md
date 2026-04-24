@@ -1,4 +1,4 @@
-# 🪙 Gold — US vs India
+# 🟡 Gold — US vs India
 
 A tiny personal app that answers: *"Should I buy gold at Costco today, or is it cheaper in India?"*
 

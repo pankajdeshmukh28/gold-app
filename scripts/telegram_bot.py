@@ -39,6 +39,7 @@ if REPO_ROOT not in sys.path:
 
 from scripts.config import (  # noqa: E402
     ADMIN_CHAT_IDS,
+    DASHBOARD_URL,
     DATA_FILE,
     MAX_SUBSCRIBERS,
     REQUEST_TIMEOUT,
@@ -61,12 +62,16 @@ from scripts.state import (  # noqa: E402
     update_last_update_id,
 )
 
-DASHBOARD_URL = os.environ.get(
-    "DASHBOARD_URL", "https://pankajdeshmukh28.github.io/gold-app/"
-)
-
 # Short friendly name used in bot replies. Override via env if you want.
 ADMIN_NAME = os.environ.get("ADMIN_NAME", "the admin")
+
+
+def _dashboard_footer(leading_newlines: int = 2) -> str:
+    """Render a clickable HTML link to the live dashboard, prefixed with
+    blank lines so it sits visually separated at the end of a message."""
+    return ("\n" * leading_newlines) + (
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -139,24 +144,29 @@ def _resolve_target_chat_id(token: str, subscribers: List[dict]) -> Optional[int
 # Message templates
 # ---------------------------------------------------------------------------
 
-WELCOME = (
-    "🪙 <b>Welcome to Gold Pulse!</b>\n\n"
-    "This bot tracks Costco gold prices vs India's IBJA rate (incl. 3% GST) "
-    "and pings you when buying in the US saves meaningfully more than last time.\n\n"
-    "<b>What you'll get:</b>\n"
-    "• Alerts when savings jump by ≥₹500/10g (usually a few times/month)\n"
-    "• A weekly summary every Sunday ~9am PT (low/high/avg for the week)\n\n"
-    "<b>Commands:</b>\n"
-    "/status — current savings snapshot\n"
-    "/help — show this help\n"
-    "/stop — unsubscribe anytime\n\n"
-    f"Live dashboard: {DASHBOARD_URL}"
-)
+def _welcome() -> str:
+    return (
+        "🟡 <b>Welcome to Gold Pulse!</b>\n\n"
+        "This bot tracks Costco gold prices vs India's IBJA rate (incl. 3% GST) "
+        "and pings you when buying in the US saves meaningfully more than last time.\n\n"
+        "<b>What you'll get:</b>\n"
+        "• Alerts when savings jump by ≥₹500/10g (usually a few times/month)\n"
+        "• A weekly summary every Sunday ~9am PT (low/high/avg for the week)\n\n"
+        "<b>Commands:</b>\n"
+        "/status — current savings snapshot\n"
+        "/help — show this help\n"
+        "/stop — unsubscribe anytime"
+        + _dashboard_footer()
+    )
 
-ALREADY_SUBSCRIBED = (
-    "You're already subscribed — you'll keep getting alerts. "
-    "Reply /status for the current snapshot or /stop to unsubscribe."
-)
+
+def _already_subscribed() -> str:
+    return (
+        "You're already subscribed — you'll keep getting alerts. "
+        "Reply /status for the current snapshot or /stop to unsubscribe."
+        + _dashboard_footer()
+    )
+
 
 GOODBYE = (
     "You're unsubscribed. No more pings. "
@@ -165,15 +175,17 @@ GOODBYE = (
 
 NOT_SUBSCRIBED = "You weren't subscribed. Reply /start to subscribe."
 
-HELP = (
-    "🪙 <b>Gold Pulse — help</b>\n\n"
-    "<b>Commands:</b>\n"
-    "/start — subscribe\n"
-    "/stop — unsubscribe\n"
-    "/status — current savings snapshot\n"
-    "/help — this message\n\n"
-    f"Dashboard: {DASHBOARD_URL}"
-)
+
+def _help() -> str:
+    return (
+        "🟡 <b>Gold Pulse — help</b>\n\n"
+        "<b>Commands:</b>\n"
+        "/start — subscribe\n"
+        "/stop — unsubscribe\n"
+        "/status — current savings snapshot\n"
+        "/help — this message"
+        + _dashboard_footer()
+    )
 
 CAPPED_FULL = (
     "Subscriptions are temporarily closed (capacity reached). "
@@ -219,14 +231,14 @@ def handle_start(
         return DENIED, d
 
     if find_subscriber(subscribers, chat_id):
-        return ALREADY_SUBSCRIBED, d
+        return _already_subscribed(), d
 
     if MAX_SUBSCRIBERS and len(subscribers) >= MAX_SUBSCRIBERS:
         return CAPPED_FULL, d
 
     add_subscriber(subscribers, {"chat_id": chat_id, **user_info})
     d["subscribers"] = True
-    return WELCOME, d
+    return _welcome(), d
 
 
 def handle_stop(
@@ -241,7 +253,7 @@ def handle_stop(
 
 
 def handle_help() -> Tuple[str, Dict[str, bool]]:
-    return HELP, _dirty()
+    return _help(), _dirty()
 
 
 def handle_status() -> Tuple[str, Dict[str, bool]]:
@@ -265,7 +277,7 @@ def handle_status() -> Tuple[str, Dict[str, bool]]:
     if us_inr is not None and in_inr is not None:
         savings = in_inr - us_inr
 
-    lines = ["🪙 <b>Gold Pulse — right now</b>", ""]
+    lines = ["🟡 <b>Gold Pulse — right now</b>", ""]
     if savings is not None and savings > 0:
         lines.append(f"💰 <b>₹{savings:,.0f}/10g</b> saved buying in US")
     elif savings is not None:
@@ -282,9 +294,7 @@ def handle_status() -> Tuple[str, Dict[str, bool]]:
         )
     if inputs.get("usd_inr"):
         lines.append(f"USD→INR: ₹{inputs['usd_inr']:.2f}")
-    lines.append("")
-    lines.append(f"Dashboard: {DASHBOARD_URL}")
-    return "\n".join(lines), _dirty()
+    return "\n".join(lines) + _dashboard_footer(), _dirty()
 
 
 def handle_list(subscribers: List[dict], deny: List[int]) -> Tuple[str, Dict[str, bool]]:

@@ -28,7 +28,7 @@ REPO_ROOT = os.path.dirname(THIS_DIR)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from scripts.config import DATA_FILE, HISTORY_FILE  # noqa: E402
+from scripts.config import DASHBOARD_URL, DATA_FILE, HISTORY_FILE  # noqa: E402
 from scripts.notifier import (  # noqa: E402
     NotifierNotConfigured,
     get_broadcast_notifier,
@@ -120,8 +120,8 @@ def _warmup_message(now_utc: datetime, row_count: int) -> str:
     return (
         f"📅 <b>Weekly gold pulse — {end_local}</b>\n\n"
         f"Tracker is still warming up — {qualifier} in the past 7 days. "
-        "Next Sunday's digest will have a full week of savings data to roll up. "
-        "The live dashboard has the current snapshot."
+        "Next Sunday's digest will have a full week of savings data to roll up.\n\n"
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
     )
 
 
@@ -214,7 +214,9 @@ def build_message(data: Optional[dict], history: List[dict], now_utc: Optional[d
 
     lines += [
         "",
-        f"<i>{len(rows)} checkpoints this week. Dashboard has details.</i>",
+        f"<i>{len(rows)} checkpoints this week.</i>",
+        "",
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>',
     ]
     return "\n".join(lines)
 

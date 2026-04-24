@@ -55,6 +55,12 @@ HISTORY_MAX_POINTS = _env_int("HISTORY_MAX_POINTS", 168)
 SUBSCRIBERS_FILE = _env_str("SUBSCRIBERS_FILE", "docs/subscribers.json")
 DENY_LIST_FILE = _env_str("DENY_LIST_FILE", "docs/deny_list.json")
 
+# Dashboard URL surfaced inside Telegram messages (welcome, help, /status,
+# price alerts, weekly digest). Falls back to a hardcoded default; override
+# via `DASHBOARD_URL` GH Actions variable so different repos/forks work.
+# Uses _env_str so an empty string from CI is treated as "unset".
+DASHBOARD_URL = _env_str("DASHBOARD_URL", "https://pankajdeshmukh28.github.io/gold-app/")
+
 TELEGRAM_BOT_TOKEN = _env_str("TELEGRAM_BOT_TOKEN", "")
 # TELEGRAM_CHAT_ID is the "admin" chat — yours. It's always included in
 # broadcasts (safety net: even if subscribers.json is empty or corrupted

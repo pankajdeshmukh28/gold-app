@@ -22,6 +22,7 @@ if REPO_ROOT not in sys.path:
 from scripts.config import (
     COSTCO_PRODUCT_URL,
     COSTCO_SKU_GRAMS,
+    DASHBOARD_URL,
     DATA_FILE,
     INDIA_GST_RATE,
     SAVINGS_INCREASE_THRESHOLD_INR,
@@ -298,7 +299,8 @@ def maybe_notify(
         f"(${verdict_data['us_usd_per_10g']:,.2f}) · src: {us_source.upper()}\n"
         f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} "
         f"(${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)\n"
-        f"<i>US bar: ${us_price_usd:,.2f}</i>"
+        f"<i>US bar: ${us_price_usd:,.2f}</i>\n\n"
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
     )
 
     try:
@@ -333,7 +335,8 @@ def send_test_notification() -> int:
             f"Sent at {_utcnow_iso()}\n"
             "If you see this, your Telegram bot is wired up correctly. "
             f"Real alerts fire when the US-vs-India savings grow by "
-            f"≥ ₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g between runs."
+            f"≥ ₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g between runs.\n\n"
+            f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
         )
         print("[test-notify] OK — check Telegram.")
         return 0
