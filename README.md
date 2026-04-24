@@ -7,8 +7,10 @@ A tiny personal app that answers: *"Should I buy gold at Costco today, or is it 
 - Computes **India per-gram price** with **3% GST**
 - Publishes a **mobile-friendly dashboard** on GitHub Pages
 - Sends a **Telegram notification** when the US-vs-India savings grow (i.e. a better moment to buy)
+- Sends a **weekly Telegram digest** every Sunday 9am PT — low / high / avg savings for the week
+- Supports **multi-user subscriptions** — anyone can `/start` the bot to self-subscribe; admin controls (`/list`, `/kick`, `/block`, `/broadcast`) for moderation
 
-Everything runs on free infrastructure: GitHub Actions runs a cron every 2 hours, writes `docs/data.json`, and GitHub Pages serves the dashboard. No servers, no database, no hosting bills.
+Everything runs on free infrastructure: GitHub Actions runs a cron every 2 hours (plus a separate Sunday digest), writes `docs/data.json`, and GitHub Pages serves the dashboard. No servers, no database, no hosting bills.
 
 ---
 
@@ -29,7 +31,22 @@ GitHub Actions (cron every 2h)
          │
 GitHub Pages (docs/)
   └─ index.html  (mobile-first dashboard, reads data.json via fetch)
+
+GitHub Actions (Sunday 16:00 UTC — once weekly)
+  └─ scripts/weekly_digest.py
+      ├─ read docs/history.json (past 7 days)
+      ├─ compute low / high / avg / trend-vs-last-Sunday (all in ₹/10g)
+      └─ broadcast formatted "weekly pulse" to all subscribers
+
+GitHub Actions (every 5 min — subscriber self-service)
+  └─ scripts/telegram_bot.py
+      ├─ getUpdates (polls Telegram for new messages)
+      ├─ route /start /stop /help /status (public)
+      ├─ route /list /kick /block /unblock /stats /broadcast (admin-only)
+      └─ commit docs/subscribers.json + docs/deny_list.json
 ```
+
+**Broadcast fan-out:** both the price-alert cron and the weekly digest use `BroadcastNotifier`, which iterates over subscribers + admin chat ID(s), respects Telegram's 30 msgs/sec rate limit, retries on `429`, and auto-prunes any chat that has blocked the bot.
 
 Accuracy is **directional**, not financial-grade. See [Accuracy caveats](#accuracy-caveats) below.
 
@@ -129,6 +146,76 @@ cd docs && python3 -m http.server 8080
 
 ---
 
+## Sharing the bot (family & friends subscribe flow)
+
+The bot is self-service. Anyone with the link can subscribe themselves — no tech setup, no chat-ID copy-paste.
+
+### Invite flow (what you share)
+
+Just send them a link to your bot:
+
+```
+https://t.me/<your-bot-username>
+```
+
+(Your bot's username is whatever you set up in BotFather, e.g. `t.me/GoldPulseBot`. It's case-insensitive.)
+
+**What they experience:**
+1. Tap the link → Telegram opens a chat with your bot.
+2. They see a big blue **START** button (plus the bot's description text).
+3. Tap START → within ~5 minutes they receive a welcome message confirming they're subscribed.
+4. They're in. They'll get the same price alerts + weekly Sunday digest as you.
+
+That's it — no copy/paste, no technical steps. You can share the link over iMessage / WhatsApp / email.
+
+### Bot description (set once in BotFather)
+
+Before sharing, set the bot's "About" and "Description" in BotFather (`/mybots` → your bot → `Edit Bot`). Suggested text:
+
+```
+Gold price alerts from <your name>. Pings you when Costco gold is saving you
+meaningfully more INR/10g than India, plus a Sunday weekly pulse. Tap START
+to subscribe. Confirms within a few minutes.
+```
+
+This text shows up **before** they tap START, so it manages expectations.
+
+### Admin commands (you only)
+
+Chat with your own bot and use these commands. Your chat ID (set in `TELEGRAM_CHAT_ID` secret) is the admin by default; add more via the `ADMIN_CHAT_IDS` GH Actions variable (comma-separated).
+
+| Command | What it does |
+|---|---|
+| `/list` | List all subscribers (first name, @handle, join date, chat_id) |
+| `/stats` | Totals: subscribers, new this week, blocked, admins |
+| `/kick <chat_id>` or `/kick @username` | Remove a subscriber (they can re-subscribe) |
+| `/block <chat_id>` or `/block @username` | Remove + add to deny-list (cannot re-subscribe) |
+| `/unblock <chat_id>` | Lift a block |
+| `/broadcast <message>` | Send a one-off message to all subscribers (e.g. "bot will be down tomorrow") |
+
+### Subscriber commands (anyone)
+
+| Command | What it does |
+|---|---|
+| `/start` | Subscribe |
+| `/stop` | Unsubscribe |
+| `/status` | Show the current savings snapshot |
+| `/help` | Show help text |
+
+### Safety rails
+
+- **Subscriber cap** — `MAX_SUBSCRIBERS` (default 1000) prevents runaway growth if the bot link ever gets shared more broadly than intended. Raise/lower via GH Actions variable.
+- **Deny list** — `/block` permanently prevents a chat from re-subscribing. Persisted in `docs/deny_list.json`.
+- **Group-chat protection** — if someone adds the bot to a group, it replies with a polite "1:1 only" note and ignores commands.
+- **Admin-only guard** — non-admins sending admin commands get a silent "unauthorized" reply; no info leaks about who the admin is.
+- **Auto-prune** — if a subscriber blocks the bot, the next broadcast detects the `403 Forbidden` response and automatically removes them.
+
+### Subscription latency
+
+The bot polls Telegram every 5 min. So a new subscriber waits up to ~5 min between tapping START and receiving their welcome message. The BotFather description text sets this expectation upfront so they don't think the bot is broken.
+
+---
+
 ## Optional: Real Costco pricing (local Mac + Playwright)
 
 Costco is protected by Akamai Bot Manager, which blocks GitHub Actions IPs reliably. To get **actual Costco** prices (instead of the JM Bullion fallback), run a lightweight Playwright fetcher locally on your Mac via `launchd`. Your residential IP + a real Chromium instance beats Akamai consistently.
@@ -183,14 +270,19 @@ The cookies set during that session persist in Chromium's default profile and su
 
 ```
 gold-app/
-├── .github/workflows/fetch-prices.yml  # cron + commit workflow
+├── .github/workflows/
+│   ├── fetch-prices.yml     # main cron (every 2h) + commit data + broadcast alerts
+│   ├── weekly-digest.yml    # Sunday 9am PT weekly digest broadcast
+│   └── bot-poller.yml       # every 5 min — handles /start /stop /admin commands
 ├── scripts/
 │   ├── fetch_prices.py      # main cron entry point
+│   ├── weekly_digest.py     # weekly Telegram digest entry point
+│   ├── telegram_bot.py      # command processor (subscribe/unsubscribe/admin)
 │   ├── fetch_costco_pw.py   # local-only Costco Playwright fetcher
 │   ├── run_costco_local.sh  # launchd wrapper (pull, fetch, commit, push)
 │   ├── config.py            # all tunables (env-driven)
-│   ├── notifier.py          # Telegram impl
-│   ├── state.py             # last price + history persistence
+│   ├── notifier.py          # Telegram impl (single + broadcast fan-out)
+│   ├── state.py             # last price + history + subscribers persistence
 │   └── sources/
 │       ├── fx.py              # USD→INR
 │       ├── gold_spot.py       # international spot
@@ -204,8 +296,10 @@ gold-app/
 │   ├── index.html           # mobile dashboard
 │   ├── data.json            # main verdict (written by CI)
 │   ├── costco.json          # optional, written by local Costco fetcher
-│   ├── state.json           # drop-detection state
-│   └── history.json         # recent readings for the sparkline
+│   ├── state.json           # drop-detection state + bot update offset
+│   ├── history.json         # recent readings for the sparkline
+│   ├── subscribers.json     # subscriber list (managed by telegram_bot.py)
+│   └── deny_list.json       # blocked chat IDs (managed by telegram_bot.py)
 ├── requirements.txt         # CI deps
 ├── requirements-local.txt   # CI deps + Playwright (for local only)
 └── README.md
@@ -240,7 +334,13 @@ Most things are tunable without code changes:
 | Quieter notifications | Raise `SAVINGS_INCREASE_THRESHOLD_INR` (e.g. `1000` for ≥₹1,000/10g improvements only) |
 | Louder notifications | Lower `SAVINGS_INCREASE_THRESHOLD_INR` (e.g. `250` — you'll get pinged more often) |
 | Different GST | Set `INDIA_GST_RATE` (e.g. `0.05`) |
-| Swap notifier channel | Subclass `Notifier` in `scripts/notifier.py`, return your impl from `get_default_notifier()` |
+| Weekly digest day/time | Edit `.github/workflows/weekly-digest.yml`, line `cron: "0 16 * * 0"` (currently Sun 16:00 UTC = Sun 9am PT) |
+| Preview the digest without sending | Run the **Weekly gold digest** workflow manually (GitHub → Actions → Run workflow) with `dry_run: true` — message is printed to the job logs |
+| Subscriber cap | `MAX_SUBSCRIBERS` GH Actions variable (default 1000, set to 0 to disable) |
+| Extra admins | `ADMIN_CHAT_IDS` GH Actions variable, comma-separated chat IDs — e.g. `123,456` |
+| Bot poll frequency | Edit `.github/workflows/bot-poller.yml`, line `cron: "*/5 * * * *"` |
+| Rate-limit pacing | `BROADCAST_SLEEP_SEC` (default 0.05s between sends) |
+| Swap notifier channel | Subclass `Notifier` in `scripts/notifier.py`, return your impl from `get_default_notifier()` / `get_broadcast_notifier()` |
 
 ---
 
