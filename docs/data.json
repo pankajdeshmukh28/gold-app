@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-24T21:07:41+00:00",
+  "timestamp": "2026-04-24T22:59:59+00:00",
   "status": "ok",
   "inputs": {
     "spot_usd_per_oz": 4710.8,
@@ -12,10 +12,10 @@
     "india_gst_rate": 0.03,
     "india_source": "ibja",
     "india_url": "https://ibjarates.com/",
-    "india_base_inr_per_10g_pre_gst": 151059.0,
-    "india_date": "23/04/2026",
+    "india_base_inr_per_10g_pre_gst": 151479.0,
+    "india_date": "24/04/2026",
     "india_session": "PM",
-    "india_notes": "IBJA 999 benchmark (PM, 23/04/2026). Reflects real Indian retail market (import duty + local premium baked in)."
+    "india_notes": "IBJA 999 benchmark (PM, 24/04/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
     "us_price_all_in_usd": 4812.18,
@@ -23,21 +23,21 @@
     "us_usd_per_10g": 1547.15,
     "us_inr_per_10g": 145695.34,
     "us_sales_tax_rate": 0.0,
-    "india_usd_per_gram": 165.22,
-    "india_inr_per_gram": 15559.08,
-    "india_usd_per_10g": 1652.23,
-    "india_inr_per_10g": 155590.77,
-    "delta_pct": -6.36,
-    "diff_usd_per_10g": -105.08,
-    "diff_inr_per_10g": -9895.43,
-    "abs_diff_usd_per_10g": 105.08,
-    "abs_diff_inr_per_10g": 9895.43,
+    "india_usd_per_gram": 165.68,
+    "india_inr_per_gram": 15602.34,
+    "india_usd_per_10g": 1656.82,
+    "india_inr_per_10g": 156023.37,
+    "delta_pct": -6.62,
+    "diff_usd_per_10g": -109.67,
+    "diff_inr_per_10g": -10328.03,
+    "abs_diff_usd_per_10g": 109.67,
+    "abs_diff_inr_per_10g": 10328.03,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b99,895 (\u2248 $105.08) per 10g buying in US vs India [6.36%]"
+    "verdict_human": "Save \u20b910,328 (\u2248 $109.67) per 10g buying in US vs India [6.62%]"
   },
-  "savings_inr_per_10g": 9895.43,
+  "savings_inr_per_10g": 10328.03,
   "alert_sent": false,
-  "last_us_price_seen": 4824.98,
-  "last_savings_inr_seen": 9507.89,
+  "last_us_price_seen": 4812.18,
+  "last_savings_inr_seen": 9895.43,
   "savings_increase_threshold_inr": 500.0
 }
