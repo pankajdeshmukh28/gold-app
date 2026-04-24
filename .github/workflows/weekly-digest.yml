@@ -1,0 +1,66 @@
+name: Weekly gold digest
+
+# Sunday 16:00 UTC = 09:00 PDT (summer) / 08:00 PST (winter).
+# Gold prices don't care about DST; an 8-vs-9am drift is fine for a
+# Sunday "pulse" message.
+on:
+  schedule:
+    - cron: "0 16 * * 0"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the digest to logs but do NOT send to Telegram"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+concurrency:
+  group: weekly-digest
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send weekly digest
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ADMIN_CHAT_IDS: ${{ vars.ADMIN_CHAT_IDS }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: python -m scripts.weekly_digest
+
+      - name: Commit pruned subscribers (if any)
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name "gold-app-bot"
+          git config user.email "gold-app-bot@users.noreply.github.com"
+          git add docs/subscribers.json
+          if git diff --staged --quiet; then
+            echo "No subscriber pruning this run."
+          else
+            git commit -m "chore(digest): prune blocked subscribers"
+            for i in 1 2 3; do
+              git pull --rebase --autostash && git push && break || sleep $((i * 5))
+            done
+          fi
