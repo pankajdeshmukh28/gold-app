@@ -206,5 +206,15 @@
     "in_per_g": 165.22,
     "delta": -6.81,
     "src": "jmbullion"
+  },
+  {
+    "t": "2026-04-24T04:59:54+00:00",
+    "us": 4787.61,
+    "us_per_g": 153.93,
+    "in_per_g": 165.22,
+    "savings_inr_per_10g": 10639.32,
+    "usd_inr": 94.1701,
+    "delta": -6.84,
+    "src": "jmbullion"
   }
 ]
