@@ -22,6 +22,7 @@ logs/
 
 # Local debug / throwaway scripts that may contain secrets
 testTelegram.sh
+subscribeTest.sh
 test_*.sh
 scratch/
 
