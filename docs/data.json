@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-02T03:52:40+00:00",
+  "timestamp": "2026-05-02T06:20:58+00:00",
   "status": "ok",
   "inputs": {
     "spot_usd_per_oz": 4615.4,
@@ -38,6 +38,6 @@
   "savings_inr_per_10g": 10276.95,
   "alert_sent": false,
   "last_us_price_seen": 4728.74,
-  "last_savings_inr_seen": 10372.64,
+  "last_savings_inr_seen": 10276.95,
   "savings_increase_threshold_inr": 500.0
 }
