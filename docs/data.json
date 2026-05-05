@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-05-05T19:52:59+00:00",
+  "timestamp": "2026-05-05T21:15:54+00:00",
   "status": "ok",
   "inputs": {
-    "spot_usd_per_oz": 4556.4,
+    "spot_usd_per_oz": 4558.6,
     "usd_inr": 95.228,
-    "us_price_usd": 4668.75,
+    "us_price_usd": 4671.08,
     "us_source": "jmbullion",
     "us_url": "https://www.jmbullion.com/1-oz-valcambi-matte-gold-bar/",
     "us_grams": 31.1035,
@@ -18,26 +18,26 @@
     "india_notes": "IBJA 999 benchmark (PM, 04/05/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
-    "us_price_all_in_usd": 4668.75,
-    "us_usd_per_gram": 150.1,
-    "us_usd_per_10g": 1501.04,
-    "us_inr_per_10g": 142940.79,
+    "us_price_all_in_usd": 4671.08,
+    "us_usd_per_gram": 150.18,
+    "us_usd_per_10g": 1501.79,
+    "us_inr_per_10g": 143012.13,
     "us_sales_tax_rate": 0.0,
     "india_usd_per_gram": 160.19,
     "india_inr_per_gram": 15254.3,
     "india_usd_per_10g": 1601.87,
     "india_inr_per_10g": 152543.0,
-    "delta_pct": -6.29,
-    "diff_usd_per_10g": -100.83,
-    "diff_inr_per_10g": -9602.21,
-    "abs_diff_usd_per_10g": 100.83,
-    "abs_diff_inr_per_10g": 9602.21,
+    "delta_pct": -6.25,
+    "diff_usd_per_10g": -100.08,
+    "diff_inr_per_10g": -9530.87,
+    "abs_diff_usd_per_10g": 100.08,
+    "abs_diff_inr_per_10g": 9530.87,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b99,602 (\u2248 $100.83) per 10g buying in US vs India [6.29%]"
+    "verdict_human": "Save \u20b99,531 (\u2248 $100.08) per 10g buying in US vs India [6.25%]"
   },
-  "savings_inr_per_10g": 9602.21,
+  "savings_inr_per_10g": 9530.87,
   "alert_sent": false,
-  "last_us_price_seen": 4673.31,
-  "last_savings_inr_seen": 9462.6,
+  "last_us_price_seen": 4668.75,
+  "last_savings_inr_seen": 9602.21,
   "savings_increase_threshold_inr": 500.0
 }
