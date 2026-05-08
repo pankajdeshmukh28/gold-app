@@ -6,7 +6,10 @@ Flow:
   3. Compute per-gram USD on both sides (India side adds 3% GST).
   4. Write docs/data.json for the dashboard.
   5. Append to docs/history.json.
-  6. If US price dropped vs last seen (by threshold), send Telegram notification.
+  6. Telegram: alert if US bar price drops by ≥ threshold USD vs last run, and/or
+     if buying-in-US savings improve by ≥ threshold INR/10g vs last run.
+  7. Track cumulative US bar high/low and India all-in ₹/10g high/low in state;
+     surface in alerts, data.json, dashboard, and /status.
 """
 import json
 import os
@@ -26,6 +29,7 @@ from scripts.config import (
     DATA_FILE,
     INDIA_GST_RATE,
     SAVINGS_INCREASE_THRESHOLD_INR,
+    US_PRICE_DROP_ALERT_USD,
     US_SALES_TAX_RATE,
 )
 from scripts.notifier import (
@@ -56,6 +60,7 @@ from scripts.state import (
     save_state,
     update_last_savings_inr,
     update_last_us_price,
+    update_tracked_extremes,
 )
 
 
@@ -231,12 +236,122 @@ def compute_verdict(
     }
 
 
+def _us_bar_headline(us_price_usd: float, us_source: str) -> str:
+    return f'🇺🇸 <b>US gold bar: ${us_price_usd:,.2f}</b> · {us_source.upper()}'
+
+
+def _snapshot_tail(verdict_data: dict) -> str:
+    return (
+        f"<b>Per 10g (all-in):</b>\n"
+        f"• US: ₹{verdict_data['us_inr_per_10g']:,.0f} "
+        f"(${verdict_data['us_usd_per_10g']:,.2f})\n"
+        f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} "
+        f"(${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)"
+    )
+
+
+def _consumer_alert_body(
+    verdict_data: dict,
+    us_price_usd: float,
+    us_source: str,
+    savings_inr_per_10g: float,
+    extremes: Optional[dict],
+) -> str:
+    """Telegram HTML: what you pay in the US, India benchmark, savings, tracker hi/lo."""
+    if not extremes:
+        return _snapshot_tail(verdict_data)
+
+    v = verdict_data
+    lines = [
+        "<b>While you're in the US</b>",
+        f"• You pay <b>${us_price_usd:,.2f}</b> for the bar ({us_source.upper()})",
+        f"• That's ≈ <b>${v['us_usd_per_10g']:,.2f}/10g</b> all-in (your checkout basis)",
+        "",
+        "<b>India (same /10g basis, all-in)</b>",
+        f"• <b>₹{v['india_inr_per_10g']:,.0f}</b> incl. GST · ≈ ${v['india_usd_per_10g']:,.2f}",
+    ]
+    if savings_inr_per_10g > 0:
+        lines.append(
+            f"• <b>You save ₹{savings_inr_per_10g:,.0f}/10g</b> buying here vs India"
+        )
+    elif savings_inr_per_10g < 0:
+        lines.append(
+            f"• India is <b>₹{-savings_inr_per_10g:,.0f}/10g</b> cheaper than this US price"
+        )
+    else:
+        lines.append("• About tied either way on per 10g")
+
+    tb = extremes.get("us_bar_usd") or {}
+    ti = extremes.get("india_inr_per_10g") or {}
+    since = extremes.get("since") or ""
+    if tb.get("low") is not None and ti.get("low") is not None:
+        since_short = since[:10] if len(since) >= 10 else since
+        lines.extend(
+            [
+                "",
+                f"<b>Tracker range (since {since_short})</b>",
+                f"• US bar: ${float(tb['low']):,.2f} – ${float(tb['high']):,.2f}",
+                f"• India: ₹{float(ti['low']):,.0f} – ₹{float(ti['high']):,.0f}/10g",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
+def maybe_notify_us_bar_drop(
+    last_us_price_usd: Optional[float],
+    current_usd: float,
+    verdict_data: dict,
+    us_source: str,
+    savings_inr_per_10g: float,
+    extremes: Optional[dict],
+) -> Optional[str]:
+    """Alert when the tracked US retail bar price falls by ≥ US_PRICE_DROP_ALERT_USD vs last run."""
+    if last_us_price_usd is None:
+        print(
+            "[notify-drop] no prior US bar price — skipping drop alert on first observation"
+        )
+        return None
+
+    drop_usd = last_us_price_usd - current_usd
+    if drop_usd < US_PRICE_DROP_ALERT_USD:
+        print(
+            f"[notify-drop] US bar change ${drop_usd:+.2f} "
+            f"(drop threshold ${US_PRICE_DROP_ALERT_USD:,.0f}) — no alert"
+        )
+        return None
+
+    msg = (
+        f"📉 <b>US gold bar down ${drop_usd:,.0f}</b>\n"
+        f"<b>Now ${current_usd:,.2f}</b> (was ${last_us_price_usd:,.2f}) · "
+        f"{us_source.upper()}\n\n"
+        f"{_consumer_alert_body(verdict_data, current_usd, us_source, savings_inr_per_10g, extremes)}\n\n"
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
+    )
+
+    try:
+        notifier = get_broadcast_notifier()
+        result = notifier.send(msg)
+        print(
+            f"[notify-drop] US bar −${drop_usd:,.0f} alert "
+            f"sent={result['sent']} failed={result['failed']} "
+            f"pruned={result['pruned']} of {result['targets']} targets"
+        )
+        return msg
+    except NotifierNotConfigured as e:
+        print(f"[notify-drop] skipped — {e}")
+    except Exception as e:
+        print(f"[notify-drop] failed to send: {e}")
+    return None
+
+
 def maybe_notify(
     savings_inr_per_10g: float,
     last_savings_inr: Optional[float],
     verdict_data: dict,
     us_source: str,
     us_price_usd: float,
+    extremes: Optional[dict],
 ) -> Optional[str]:
     """Alert when buying-in-US savings improves by ≥ threshold vs last run.
 
@@ -291,15 +406,11 @@ def maybe_notify(
         swing_line = f"Savings delta: ₹{delta_inr:+,.0f}/10g"
 
     msg = (
+        f"{_us_bar_headline(us_price_usd, us_source)}\n\n"
         f"🟢 <b>Better time to buy — +₹{delta_inr:,.0f}/10g vs last check</b>\n"
         f"{swing_line}\n\n"
         f"{headline}\n\n"
-        f"<b>Snapshot (per 10g, all-in):</b>\n"
-        f"• US: ₹{verdict_data['us_inr_per_10g']:,.0f} "
-        f"(${verdict_data['us_usd_per_10g']:,.2f}) · src: {us_source.upper()}\n"
-        f"• India: ₹{verdict_data['india_inr_per_10g']:,.0f} "
-        f"(${verdict_data['india_usd_per_10g']:,.2f}, incl. 3% GST)\n"
-        f"<i>US bar: ${us_price_usd:,.2f}</i>\n\n"
+        f"{_consumer_alert_body(verdict_data, us_price_usd, us_source, savings_inr_per_10g, extremes)}\n\n"
         f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
     )
 
@@ -334,8 +445,10 @@ def send_test_notification() -> int:
             "✅ <b>Gold tracker: test message</b>\n"
             f"Sent at {_utcnow_iso()}\n"
             "If you see this, your Telegram bot is wired up correctly. "
-            f"Real alerts fire when the US-vs-India savings grow by "
-            f"≥ ₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g between runs.\n\n"
+            f"Alerts: US bar price down ≥ "
+            f"${US_PRICE_DROP_ALERT_USD:,.0f} vs last check, and/or US-vs-India savings "
+            f"up ≥ ₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g.\n\n"
+            f"{_us_bar_headline(2650.0, 'example')} <i>(sample)</i>\n\n"
             f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
         )
         print("[test-notify] OK — check Telegram.")
@@ -421,20 +534,37 @@ def main() -> int:
     state = load_state()
     last_us_price = get_last_us_price(state)
     last_savings_inr = get_last_savings_inr(state)
+    timestamp = _utcnow_iso()
 
-    alert_sent = maybe_notify(
+    tracked_extremes = update_tracked_extremes(
+        state,
+        us_price_usd=us["price_usd"],
+        india_inr_per_10g_all_in=verdict["india_inr_per_10g"],
+        timestamp_iso=timestamp,
+    )
+
+    drop_alert_sent = maybe_notify_us_bar_drop(
+        last_us_price_usd=last_us_price,
+        current_usd=us["price_usd"],
+        verdict_data=verdict,
+        us_source=us["source"],
+        savings_inr_per_10g=savings_inr_per_10g,
+        extremes=tracked_extremes,
+    )
+    savings_alert_sent = maybe_notify(
         savings_inr_per_10g=savings_inr_per_10g,
         last_savings_inr=last_savings_inr,
         verdict_data=verdict,
         us_source=us["source"],
         us_price_usd=us["price_usd"],
+        extremes=tracked_extremes,
     )
+    alert_sent = bool(drop_alert_sent or savings_alert_sent)
 
     update_last_us_price(state, us["price_usd"])
     update_last_savings_inr(state, savings_inr_per_10g)
     save_state(state)
 
-    timestamp = _utcnow_iso()
     payload = {
         "timestamp": timestamp,
         "status": "ok",
@@ -456,12 +586,16 @@ def main() -> int:
         },
         "verdict": verdict,
         "savings_inr_per_10g": round(savings_inr_per_10g, 2),
-        "alert_sent": bool(alert_sent),
+        "alert_sent": alert_sent,
+        "us_drop_alert_sent": bool(drop_alert_sent),
+        "savings_alert_sent": bool(savings_alert_sent),
+        "us_price_drop_threshold_usd": US_PRICE_DROP_ALERT_USD,
         "last_us_price_seen": last_us_price,
         "last_savings_inr_seen": (
             round(last_savings_inr, 2) if last_savings_inr is not None else None
         ),
         "savings_increase_threshold_inr": SAVINGS_INCREASE_THRESHOLD_INR,
+        "tracked_extremes": tracked_extremes,
     }
     write_data_file(payload)
 

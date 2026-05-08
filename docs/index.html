@@ -156,21 +156,89 @@
       border-top: 1px solid var(--border);
     }
     .costco-foot a { color: var(--accent-amber); text-decoration: none; }
-    .chart-card {
+    .trend-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 16px;
     }
-    .chart-title {
-      display: flex; justify-content: space-between; align-items: baseline;
-      font-size: 12px; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.08em;
+    .trend-head {
+      margin-bottom: 8px;
+    }
+    .trend-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--fg);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .trend-hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
       margin-bottom: 10px;
     }
+    .trend-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
     svg.spark {
-      width: 100%; height: 80px; display: block;
+      width: 100%; height: 88px; display: block;
+    }
+    .trend-foot {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .trend-foot strong { color: var(--fg); font-weight: 500; }
+    .meta-strip {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin: -4px 0 16px;
+      line-height: 1.4;
+    }
+    .meta-strip .sep { margin: 0 6px; opacity: 0.5; }
+    details.tech-details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    details.tech-details summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    details.tech-details summary::-webkit-details-marker { display: none; }
+    details.tech-details summary::after {
+      content: '▸';
+      font-size: 10px;
+      opacity: 0.6;
+      transition: transform 0.15s ease;
+    }
+    details.tech-details[open] summary::after {
+      transform: rotate(90deg);
+    }
+    details.tech-details .details-inner {
+      padding: 0 14px 12px;
+      border-top: 1px solid var(--border);
     }
     .details {
       background: var(--surface);
@@ -240,7 +308,7 @@
     <div id="notes-banner" class="notes-banner" style="display:none;"></div>
 
     <div class="verdict-card">
-      <div class="verdict-label">Verdict</div>
+      <div class="verdict-label">Buying gold · today</div>
       <div class="verdict-big" id="verdict-big">—</div>
       <div class="savings-hero" id="savings-hero">—</div>
       <div class="savings-unit" id="savings-unit">per 10g</div>
@@ -248,15 +316,17 @@
       <div class="verdict-sub" id="verdict-sub">—</div>
     </div>
 
+    <p class="meta-strip" id="meta-strip" style="display:none;"><span id="meta-bar-line">—</span></p>
+
     <div class="grid">
       <div class="cell">
-        <div class="label">US per 10g <span class="pill">all-in</span></div>
+        <div class="label">You pay in the US <span class="pill">/10g</span></div>
         <div class="val" id="us-per-10g">—</div>
         <div class="sub" id="us-per-10g-inr">—</div>
         <div class="sub" id="us-sub">—</div>
       </div>
       <div class="cell">
-        <div class="label">India per 10g <span class="pill">all-in</span></div>
+        <div class="label">India benchmark <span class="pill">/10g</span></div>
         <div class="val" id="in-per-10g">—</div>
         <div class="sub" id="in-per-10g-usd">—</div>
         <div class="sub" id="in-sub">incl. 3% GST</div>
@@ -278,23 +348,36 @@
       </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">
-        <span>Delta % — recent history</span>
+    <div class="trend-card">
+      <div class="trend-head">
+        <div class="trend-title">How your US edge vs India has moved</div>
+        <p class="trend-hint">
+          Rupees per 10g you’d keep buying here vs India — taxes included on both sides. Higher favors the US.
+        </p>
+      </div>
+      <div class="trend-meta">
+        <span>Recent snapshots</span>
         <span id="chart-range">—</span>
       </div>
-      <svg id="spark" class="spark" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+      <svg id="spark" class="spark" viewBox="0 0 300 88" preserveAspectRatio="none"></svg>
+      <div class="trend-foot" id="trend-foot" style="display:none;">
+        <div><strong>Seen while tracking</strong> · US bar <span id="track-us-inline">—</span></div>
+        <div>India all-in /10g <span id="track-in-inline">—</span></div>
+      </div>
     </div>
 
-    <div class="details">
-      <div class="row"><span class="k">Spot gold</span><span class="v" id="spot">—</span></div>
-      <div class="row"><span class="k">USD → INR</span><span class="v" id="fx">—</span></div>
-      <div class="row"><span class="k">US bar price</span><span class="v" id="us-price">—</span></div>
-      <div class="row"><span class="k">SKU size</span><span class="v" id="us-grams">—</span></div>
-      <div class="row"><span class="k">India 999 base</span><span class="v" id="india-base">—</span></div>
-      <div class="row"><span class="k">Savings vs last check</span><span class="v" id="savings-delta">—</span></div>
-      <div class="row"><span class="k">Last check</span><span class="v" id="ts">—</span></div>
-    </div>
+    <details class="tech-details">
+      <summary>Spot, FX &amp; source detail</summary>
+      <div class="details details-inner">
+        <div class="row"><span class="k">Spot gold</span><span class="v" id="spot">—</span></div>
+        <div class="row"><span class="k">USD → INR</span><span class="v" id="fx">—</span></div>
+        <div class="row"><span class="k">Bar checkout (SKU)</span><span class="v" id="us-price">—</span></div>
+        <div class="row"><span class="k">Bar weight</span><span class="v" id="us-grams">—</span></div>
+        <div class="row"><span class="k">India 999 base (pre-GST)</span><span class="v" id="india-base">—</span></div>
+        <div class="row"><span class="k">Edge vs last snapshot</span><span class="v" id="savings-delta">—</span></div>
+        <div class="row"><span class="k">Data refreshed</span><span class="v" id="ts">—</span></div>
+      </div>
+    </details>
 
     <footer>
       Directional only, not financial advice. Data updates every few hours.<br/>
@@ -325,38 +408,90 @@
       d.title = title || state;
     }
 
-    function renderSpark(history) {
+    /** INR saved per 10g buying in US vs India; synthesize legacy rows like weekly_digest. */
+    function savingsFromHistoryRow(h, fxFallback) {
+      if (h.savings_inr_per_10g != null && h.savings_inr_per_10g !== '') {
+        const x = Number(h.savings_inr_per_10g);
+        if (!isNaN(x)) return x;
+      }
+      const fx = h.usd_inr != null ? Number(h.usd_inr)
+        : (fxFallback != null ? Number(fxFallback) : null);
+      if (fx != null && h.us_per_g != null && h.in_per_g != null) {
+        return (Number(h.in_per_g) - Number(h.us_per_g)) * 10 * fx;
+      }
+      return null;
+    }
+
+    /** Sparkline of savings_inr_per_10g — consumer-facing “edge vs India” trend (not raw % delta). */
+    function renderSavingsSpark(history, fxFallback) {
       const svg = document.getElementById('spark');
+      const rangeEl = document.getElementById('chart-range');
       svg.innerHTML = '';
+
       if (!history || history.length < 2) {
-        document.getElementById('chart-range').textContent = 'not enough data yet';
+        rangeEl.textContent = 'Need a couple more snapshots';
         return;
       }
-      const values = history.map(h => h.delta);
-      const min = Math.min(...values, 0);
-      const max = Math.max(...values, 0);
-      const span = (max - min) || 1;
-      const w = 300, h = 80, pad = 4;
-      const step = (w - 2 * pad) / (history.length - 1);
 
-      const y = v => h - pad - ((v - min) / span) * (h - 2 * pad);
-      const zeroY = y(0);
+      const series = [];
+      for (let i = 0; i < history.length; i++) {
+        const s = savingsFromHistoryRow(history[i], fxFallback);
+        if (s != null && !isNaN(s)) series.push({ t: history[i].t, s });
+      }
 
-      const pts = history.map((d, i) => [pad + i * step, y(d.delta)]);
-      const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      if (series.length < 2) {
+        rangeEl.textContent = 'Need a couple more snapshots';
+        return;
+      }
 
-      const zeroLine = `<line x1="${pad}" y1="${zeroY.toFixed(1)}" x2="${w - pad}" y2="${zeroY.toFixed(1)}" stroke="#2a2a2f" stroke-dasharray="3 3" />`;
-      const fill = `<path d="${d} L${pts[pts.length-1][0].toFixed(1)},${zeroY.toFixed(1)} L${pts[0][0].toFixed(1)},${zeroY.toFixed(1)} Z" fill="rgba(245, 158, 11, 0.08)" />`;
-      const stroke = `<path d="${d}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+      const values = series.map(x => x.s);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const band = Math.max((max - min) * 0.15, 80);
+      let yMin = Math.min(min - band, 0);
+      let yMax = Math.max(max + band, 0);
+      const span = yMax - yMin || 1;
 
-      const lastX = pts[pts.length - 1][0], lastY = pts[pts.length - 1][1];
-      const dot = `<circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3" fill="#f59e0b"/>`;
+      const w = 300, h = 88, padX = 8, padY = 8;
+      const innerW = w - 2 * padX;
+      const innerH = h - 2 * padY;
+      const step = innerW / (series.length - 1);
 
-      svg.innerHTML = zeroLine + fill + stroke + dot;
+      const y = v => padY + innerH - ((v - yMin) / span) * innerH;
+      const pts = series.map((d, i) => [padX + i * step, y(d.s)]);
+      const pathD = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
 
-      const from = new Date(history[0].t);
-      document.getElementById('chart-range').textContent =
-        history.length + ' pts · ' + relTime(history[0].t).replace(' ago', '') + ' → now';
+      const zeroInView = yMin < 0 && yMax > 0;
+      const zeroY = zeroInView ? y(0) : null;
+
+      let fillPath = '';
+      if (zeroY != null) {
+        fillPath = `<path d="${pathD} L${pts[pts.length - 1][0].toFixed(1)},${zeroY.toFixed(1)} L${pts[0][0].toFixed(1)},${zeroY.toFixed(1)} Z" fill="rgba(34, 197, 94, 0.14)" />`;
+      } else if (min >= 0) {
+        const baseY = h - padY;
+        fillPath = `<path d="${pathD} L${pts[pts.length - 1][0].toFixed(1)},${baseY} L${pts[0][0].toFixed(1)},${baseY} Z" fill="rgba(34, 197, 94, 0.1)" />`;
+      } else {
+        const topY = padY;
+        fillPath = `<path d="${pathD} L${pts[pts.length - 1][0].toFixed(1)},${topY} L${pts[0][0].toFixed(1)},${topY} Z" fill="rgba(248, 113, 113, 0.1)" />`;
+      }
+
+      const zeroLine = zeroY != null
+        ? `<line x1="${padX}" y1="${zeroY.toFixed(1)}" x2="${w - padX}" y2="${zeroY.toFixed(1)}" stroke="#3f3f46" stroke-dasharray="5 5" />`
+        : '';
+
+      const lastS = series[series.length - 1].s;
+      const lineCol = lastS >= 0 ? '#22c55e' : '#f87171';
+      const stroke = `<path d="${pathD}" fill="none" stroke="${lineCol}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+      const lx = pts[pts.length - 1][0], ly = pts[pts.length - 1][1];
+      const dot = `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4" fill="${lineCol}" stroke="#0b0b0c" stroke-width="1.5"/>`;
+
+      svg.innerHTML = zeroLine + fillPath + stroke + dot;
+
+      const rupees = Math.abs(Math.round(lastS)).toLocaleString('en-IN');
+      rangeEl.textContent = lastS >= 0
+        ? `${series.length} snapshots · US ahead ~₹${rupees}/10g vs India`
+        : `${series.length} snapshots · India ahead ~₹${rupees}/10g vs this US price`;
     }
 
     async function loadCostco(mainInputs, mainVerdict) {
@@ -445,13 +580,15 @@
           subEl.textContent = 'US and India are within ±0.1% right now.';
         } else {
           heroEl.textContent = fmtINR(v.abs_diff_inr_per_10g);
-          unitEl.textContent = 'saved per 10g';
+          unitEl.textContent = cls === 'buy-us'
+            ? 'cheaper in US · per 10g'
+            : 'cheaper in India · per 10g';
           metaEl.innerHTML =
             '≈ ' + fmt$(v.abs_diff_usd_per_10g) +
             ' <span class="pct">· ' + fmtPct(dp) + '</span>';
           subEl.textContent = cls === 'buy-us'
-            ? 'if you buy in the US instead of India · per 10g · all-in'
-            : 'if you buy in India instead of the US · per 10g · all-in';
+            ? 'Buying this gold in the US vs India · same 10g, duties & GST included'
+            : 'Buying in India vs this US shelf price · same 10g basis';
         }
 
         document.getElementById('us-per-10g').textContent = fmt$(v.us_usd_per_10g);
@@ -492,6 +629,27 @@
           document.getElementById('india-base').textContent = '—';
         }
 
+        const te = data.tracked_extremes;
+        const trendFoot = document.getElementById('trend-foot');
+        if (te && te.us_bar_usd && te.india_inr_per_10g) {
+          document.getElementById('track-us-inline').textContent =
+            fmt$(te.us_bar_usd.low) + ' – ' + fmt$(te.us_bar_usd.high);
+          document.getElementById('track-in-inline').textContent =
+            fmtINR(te.india_inr_per_10g.low) + ' – ' + fmtINR(te.india_inr_per_10g.high);
+          trendFoot.style.display = 'block';
+        } else {
+          trendFoot.style.display = 'none';
+        }
+
+        const metaStrip = document.getElementById('meta-strip');
+        if (inputs.us_price_usd != null) {
+          metaStrip.style.display = 'block';
+          document.getElementById('meta-bar-line').textContent =
+            'Shelf bar · ' + fmt$(inputs.us_price_usd) + ' · refreshed ' + relTime(data.timestamp);
+        } else {
+          metaStrip.style.display = 'none';
+        }
+
         const savingsNow = data.savings_inr_per_10g;
         const savingsLast = data.last_savings_inr_seen;
         const savingsEl = document.getElementById('savings-delta');
@@ -526,8 +684,14 @@
 
         try {
           const hr = await fetch('history.json?_=' + Date.now());
-          if (hr.ok) renderSpark(await hr.json());
-        } catch (_) {}
+          if (hr.ok) {
+            renderSavingsSpark(await hr.json(), inputs.usd_inr);
+          } else {
+            document.getElementById('chart-range').textContent = 'Trend data unavailable';
+          }
+        } catch (_) {
+          document.getElementById('chart-range').textContent = 'Trend data unavailable';
+        }
 
         await loadCostco(inputs, v);
       } catch (e) {

@@ -47,6 +47,10 @@ INDIA_GST_RATE = _env_float("INDIA_GST_RATE", 0.03)
 # pings; lower it (e.g. 250) for more.
 SAVINGS_INCREASE_THRESHOLD_INR = _env_float("SAVINGS_INCREASE_THRESHOLD_INR", 500.0)
 
+# Alert when the tracked US retail gold bar price falls by at least this many
+# USD vs the previous successful run (same bar SKU / chain — Costco→JM→estimate).
+US_PRICE_DROP_ALERT_USD = _env_float("US_PRICE_DROP_ALERT_USD", 100.0)
+
 DATA_FILE = _env_str("DATA_FILE", "docs/data.json")
 STATE_FILE = _env_str("STATE_FILE", "docs/state.json")
 HISTORY_FILE = _env_str("HISTORY_FILE", "docs/history.json")

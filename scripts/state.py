@@ -5,7 +5,7 @@ served — subscribers.json + deny_list.json sit in docs/ only because the
 commit pipeline already covers docs/; they contain chat IDs which alone
 are not useful without the bot token, but if you later want them hidden
 from Pages, move them above docs/ and update SUBSCRIBERS_FILE):
-  docs/state.json          — drop-detection state + bot update offset
+  docs/state.json          — drop-detection, cumulative US/India hi-lo, bot offset
   docs/history.json        — rolling checkpoints for the sparkline
   docs/subscribers.json    — [{chat_id, username, first_name, joined_at}]
   docs/deny_list.json      — [chat_id, chat_id, ...] (blocked users)
@@ -64,6 +64,57 @@ def get_last_savings_inr(state: dict) -> Optional[float]:
 def update_last_savings_inr(state: dict, savings_inr_per_10g: float) -> None:
     state["last_savings_inr_per_10g"] = float(savings_inr_per_10g)
     state["last_updated"] = _utcnow_iso()
+
+
+def update_tracked_extremes(
+    state: dict,
+    us_price_usd: float,
+    india_inr_per_10g_all_in: float,
+    timestamp_iso: str,
+) -> dict:
+    """Cumulative min/max for US bar (USD) and India all-in rate (₹/10g) since tracking began.
+
+    Persisted under state['tracked_extremes']. Used for consumer-facing alerts and dashboard.
+    """
+    us_price_usd = float(us_price_usd)
+    india_inr_per_10g_all_in = float(india_inr_per_10g_all_in)
+
+    ex = state.get("tracked_extremes")
+    if not ex:
+        state["tracked_extremes"] = {
+            "since": timestamp_iso,
+            "us_bar_usd": {
+                "low": us_price_usd,
+                "high": us_price_usd,
+                "low_at": timestamp_iso,
+                "high_at": timestamp_iso,
+            },
+            "india_inr_per_10g": {
+                "low": india_inr_per_10g_all_in,
+                "high": india_inr_per_10g_all_in,
+                "low_at": timestamp_iso,
+                "high_at": timestamp_iso,
+            },
+        }
+        return state["tracked_extremes"]
+
+    us = ex["us_bar_usd"]
+    if us_price_usd < float(us["low"]):
+        us["low"] = us_price_usd
+        us["low_at"] = timestamp_iso
+    if us_price_usd > float(us["high"]):
+        us["high"] = us_price_usd
+        us["high_at"] = timestamp_iso
+
+    ind = ex["india_inr_per_10g"]
+    if india_inr_per_10g_all_in < float(ind["low"]):
+        ind["low"] = india_inr_per_10g_all_in
+        ind["low_at"] = timestamp_iso
+    if india_inr_per_10g_all_in > float(ind["high"]):
+        ind["high"] = india_inr_per_10g_all_in
+        ind["high_at"] = timestamp_iso
+
+    return ex
 
 
 def load_history() -> list:

@@ -278,6 +278,11 @@ def handle_status() -> Tuple[str, Dict[str, bool]]:
         savings = in_inr - us_inr
 
     lines = ["🟡 <b>Gold Pulse — right now</b>", ""]
+    us_bar = inputs.get("us_price_usd")
+    if us_bar is not None:
+        us_src_bar = (inputs.get("us_source") or "").upper()
+        lines.append(f"🇺🇸 <b>US gold bar: ${float(us_bar):,.2f}</b> · {us_src_bar}")
+        lines.append("")
     if savings is not None and savings > 0:
         lines.append(f"💰 <b>₹{savings:,.0f}/10g</b> saved buying in US")
     elif savings is not None:
@@ -294,6 +299,21 @@ def handle_status() -> Tuple[str, Dict[str, bool]]:
         )
     if inputs.get("usd_inr"):
         lines.append(f"USD→INR: ₹{inputs['usd_inr']:.2f}")
+
+    te = data.get("tracked_extremes") or {}
+    usb = te.get("us_bar_usd") or {}
+    ti = te.get("india_inr_per_10g") or {}
+    if usb.get("low") is not None and ti.get("low") is not None:
+        since = (te.get("since") or "")[:10]
+        lines.append("")
+        lines.append(f"<b>Tracker range ({since})</b>")
+        lines.append(
+            f"US bar: ${float(usb['low']):,.2f} – ${float(usb['high']):,.2f}"
+        )
+        lines.append(
+            f"India: ₹{float(ti['low']):,.0f} – ₹{float(ti['high']):,.0f}/10g all-in"
+        )
+
     return "\n".join(lines) + _dashboard_footer(), _dirty()
 
 
