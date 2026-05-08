@@ -1406,5 +1406,15 @@
     "usd_inr": 94.3529,
     "delta": -5.84,
     "src": "jmbullion"
+  },
+  {
+    "t": "2026-05-08T11:46:29+00:00",
+    "us": 4842.89,
+    "us_per_g": 155.7,
+    "in_per_g": 165.0,
+    "savings_inr_per_10g": 8773.72,
+    "usd_inr": 94.3529,
+    "delta": -5.64,
+    "src": "jmbullion"
   }
 ]
