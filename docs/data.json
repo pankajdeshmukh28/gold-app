@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-08T21:17:19+00:00",
+  "timestamp": "2026-05-08T22:28:10+00:00",
   "status": "ok",
   "inputs": {
     "spot_usd_per_oz": 4715.7,
@@ -12,10 +12,10 @@
     "india_gst_rate": 0.03,
     "india_source": "ibja",
     "india_url": "https://ibjarates.com/",
-    "india_base_inr_per_10g_pre_gst": 151149.0,
-    "india_date": "07/05/2026",
+    "india_base_inr_per_10g_pre_gst": 151078.0,
+    "india_date": "08/05/2026",
     "india_session": "PM",
-    "india_notes": "IBJA 999 benchmark (PM, 07/05/2026). Reflects real Indian retail market (import duty + local premium baked in)."
+    "india_notes": "IBJA 999 benchmark (PM, 08/05/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
     "us_price_all_in_usd": 4839.1,
@@ -23,21 +23,39 @@
     "us_usd_per_10g": 1555.81,
     "us_inr_per_10g": 146794.78,
     "us_sales_tax_rate": 0.0,
-    "india_usd_per_gram": 165.0,
-    "india_inr_per_gram": 15568.35,
-    "india_usd_per_10g": 1650.01,
-    "india_inr_per_10g": 155683.47,
-    "delta_pct": -5.71,
-    "diff_usd_per_10g": -94.21,
-    "diff_inr_per_10g": -8888.69,
-    "abs_diff_usd_per_10g": 94.21,
-    "abs_diff_inr_per_10g": 8888.69,
+    "india_usd_per_gram": 164.92,
+    "india_inr_per_gram": 15561.03,
+    "india_usd_per_10g": 1649.24,
+    "india_inr_per_10g": 155610.34,
+    "delta_pct": -5.67,
+    "diff_usd_per_10g": -93.43,
+    "diff_inr_per_10g": -8815.56,
+    "abs_diff_usd_per_10g": 93.43,
+    "abs_diff_inr_per_10g": 8815.56,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b98,889 (\u2248 $94.21) per 10g buying in US vs India [5.71%]"
+    "verdict_human": "Save \u20b98,816 (\u2248 $93.43) per 10g buying in US vs India [5.67%]"
   },
-  "savings_inr_per_10g": 8888.69,
+  "savings_inr_per_10g": 8815.56,
   "alert_sent": false,
-  "last_us_price_seen": 4849.31,
-  "last_savings_inr_seen": 8578.97,
-  "savings_increase_threshold_inr": 500.0
+  "us_drop_alert_sent": false,
+  "savings_alert_sent": false,
+  "us_price_drop_threshold_usd": 100.0,
+  "last_us_price_seen": 4839.1,
+  "last_savings_inr_seen": 8888.69,
+  "savings_increase_threshold_inr": 500.0,
+  "tracked_extremes": {
+    "since": "2026-05-08T22:28:10+00:00",
+    "us_bar_usd": {
+      "low": 4839.1,
+      "high": 4839.1,
+      "low_at": "2026-05-08T22:28:10+00:00",
+      "high_at": "2026-05-08T22:28:10+00:00"
+    },
+    "india_inr_per_10g": {
+      "low": 155610.34,
+      "high": 155610.34,
+      "low_at": "2026-05-08T22:28:10+00:00",
+      "high_at": "2026-05-08T22:28:10+00:00"
+    }
+  }
 }
