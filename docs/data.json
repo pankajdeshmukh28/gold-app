@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-05-10T21:07:27+00:00",
+  "timestamp": "2026-05-10T23:10:35+00:00",
   "status": "ok",
   "inputs": {
-    "spot_usd_per_oz": 4715.7,
+    "spot_usd_per_oz": 4693.9,
     "usd_inr": 94.4767,
-    "us_price_usd": 4837.31,
+    "us_price_usd": 4817.74,
     "us_source": "jmbullion",
     "us_url": "https://www.jmbullion.com/1-oz-gold-bar/",
     "us_grams": 31.1035,
@@ -18,27 +18,27 @@
     "india_notes": "IBJA 999 benchmark (PM, 08/05/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
-    "us_price_all_in_usd": 4837.31,
-    "us_usd_per_gram": 155.52,
-    "us_usd_per_10g": 1555.23,
-    "us_inr_per_10g": 146932.98,
+    "us_price_all_in_usd": 4817.74,
+    "us_usd_per_gram": 154.89,
+    "us_usd_per_10g": 1548.94,
+    "us_inr_per_10g": 146338.54,
     "us_sales_tax_rate": 0.0,
     "india_usd_per_gram": 164.71,
     "india_inr_per_gram": 15561.03,
     "india_usd_per_10g": 1647.08,
     "india_inr_per_10g": 155610.34,
-    "delta_pct": -5.58,
-    "diff_usd_per_10g": -91.85,
-    "diff_inr_per_10g": -8677.36,
-    "abs_diff_usd_per_10g": 91.85,
-    "abs_diff_inr_per_10g": 8677.36,
+    "delta_pct": -5.96,
+    "diff_usd_per_10g": -98.14,
+    "diff_inr_per_10g": -9271.8,
+    "abs_diff_usd_per_10g": 98.14,
+    "abs_diff_inr_per_10g": 9271.8,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b98,677 (\u2248 $91.85) per 10g buying in US vs India [5.58%]"
+    "verdict_human": "Save \u20b99,272 (\u2248 $98.14) per 10g buying in US vs India [5.96%]"
   },
-  "savings_inr_per_10g": 8677.36,
-  "alert_sent": false,
+  "savings_inr_per_10g": 9271.8,
+  "alert_sent": true,
   "us_drop_alert_sent": false,
-  "savings_alert_sent": false,
+  "savings_alert_sent": true,
   "us_price_drop_threshold_usd": 100.0,
   "last_us_price_seen": 4837.31,
   "last_savings_inr_seen": 8677.36,
@@ -46,9 +46,9 @@
   "tracked_extremes": {
     "since": "2026-05-08T22:28:10+00:00",
     "us_bar_usd": {
-      "low": 4837.15,
+      "low": 4817.74,
       "high": 4839.1,
-      "low_at": "2026-05-09T03:57:53+00:00",
+      "low_at": "2026-05-10T23:10:35+00:00",
       "high_at": "2026-05-08T22:28:10+00:00"
     },
     "india_inr_per_10g": {
