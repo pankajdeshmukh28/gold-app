@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-05-11T16:48:26+00:00",
+  "timestamp": "2026-05-11T20:04:53+00:00",
   "status": "ok",
   "inputs": {
-    "spot_usd_per_oz": 4713.3,
+    "spot_usd_per_oz": 4738.4,
     "usd_inr": 94.5702,
-    "us_price_usd": 4828.8,
+    "us_price_usd": 4850.39,
     "us_source": "jmbullion",
     "us_url": "https://www.jmbullion.com/1-oz-pamp-suisse-gold-bar-carbon-neutral/",
     "us_grams": 31.1035,
@@ -18,38 +18,38 @@
     "india_notes": "IBJA 999 benchmark (PM, 08/05/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
-    "us_price_all_in_usd": 4828.8,
-    "us_usd_per_gram": 155.25,
-    "us_usd_per_10g": 1552.49,
-    "us_inr_per_10g": 146819.69,
+    "us_price_all_in_usd": 4850.39,
+    "us_usd_per_gram": 155.94,
+    "us_usd_per_10g": 1559.44,
+    "us_inr_per_10g": 147476.14,
     "us_sales_tax_rate": 0.0,
     "india_usd_per_gram": 164.54,
     "india_inr_per_gram": 15561.03,
     "india_usd_per_10g": 1645.45,
     "india_inr_per_10g": 155610.34,
-    "delta_pct": -5.65,
-    "diff_usd_per_10g": -92.95,
-    "diff_inr_per_10g": -8790.65,
-    "abs_diff_usd_per_10g": 92.95,
-    "abs_diff_inr_per_10g": 8790.65,
+    "delta_pct": -5.23,
+    "diff_usd_per_10g": -86.01,
+    "diff_inr_per_10g": -8134.2,
+    "abs_diff_usd_per_10g": 86.01,
+    "abs_diff_inr_per_10g": 8134.2,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b98,791 (\u2248 $92.95) per 10g buying in US vs India [5.65%]"
+    "verdict_human": "Save \u20b98,134 (\u2248 $86.01) per 10g buying in US vs India [5.23%]"
   },
-  "savings_inr_per_10g": 8790.65,
+  "savings_inr_per_10g": 8134.2,
   "alert_sent": false,
   "us_drop_alert_sent": false,
   "savings_alert_sent": false,
   "us_price_drop_threshold_usd": 100.0,
-  "last_us_price_seen": 4810.91,
-  "last_savings_inr_seen": 9334.59,
+  "last_us_price_seen": 4828.8,
+  "last_savings_inr_seen": 8790.65,
   "savings_increase_threshold_inr": 500.0,
   "tracked_extremes": {
     "since": "2026-05-08T22:28:10+00:00",
     "us_bar_usd": {
       "low": 4780.86,
-      "high": 4839.1,
+      "high": 4850.39,
       "low_at": "2026-05-11T10:00:35+00:00",
-      "high_at": "2026-05-08T22:28:10+00:00"
+      "high_at": "2026-05-11T20:04:53+00:00"
     },
     "india_inr_per_10g": {
       "low": 155610.34,
