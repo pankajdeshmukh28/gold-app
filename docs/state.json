@@ -1,7 +1,7 @@
 {
-  "last_us_price_usd": 4765.45,
-  "last_updated": "2026-05-14T21:37:19+00:00",
-  "last_savings_inr_per_10g": 19071.889999999985,
+  "last_us_price_usd": 4774.82,
+  "last_updated": "2026-05-14T23:12:49+00:00",
+  "last_savings_inr_per_10g": 18970.839999999997,
   "last_telegram_update_id": 636383815,
   "tracked_extremes": {
     "since": "2026-05-08T22:28:10+00:00",
@@ -13,9 +13,9 @@
     },
     "india_inr_per_10g": {
       "low": 148819.77,
-      "high": 165806.31,
+      "high": 165993.77,
       "low_at": "2026-05-14T14:43:27+00:00",
-      "high_at": "2026-05-13T23:32:00+00:00"
+      "high_at": "2026-05-14T23:12:49+00:00"
     }
   }
 }
