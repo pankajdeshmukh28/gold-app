@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-12T22:01:06+00:00",
+  "timestamp": "2026-06-12T23:53:12+00:00",
   "status": "ok",
   "inputs": {
     "spot_usd_per_oz": 4220.3,
@@ -36,12 +36,12 @@
     "verdict_human": "Save \u20b919,211 (\u2248 $200.79) per 10g buying in US vs India [12.62%]"
   },
   "savings_inr_per_10g": 19211.42,
-  "alert_sent": true,
+  "alert_sent": false,
   "us_drop_alert_sent": false,
-  "savings_alert_sent": true,
+  "savings_alert_sent": false,
   "us_price_drop_threshold_usd": 100.0,
-  "last_us_price_seen": 4342.85,
-  "last_savings_inr_seen": 15535.34,
+  "last_us_price_seen": 4324.4,
+  "last_savings_inr_seen": 19211.42,
   "savings_increase_threshold_inr": 500.0,
   "tracked_extremes": {
     "since": "2026-05-08T22:28:10+00:00",
