@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-19T21:35:52+00:00",
+  "timestamp": "2026-06-19T23:15:49+00:00",
   "status": "ok",
   "inputs": {
     "spot_usd_per_oz": 4156.7,
@@ -12,10 +12,10 @@
     "india_gst_rate": 0.03,
     "india_source": "ibja",
     "india_url": "https://ibjarates.com/",
-    "india_base_inr_per_10g_pre_gst": 148093.0,
-    "india_date": "18/06/2026",
+    "india_base_inr_per_10g_pre_gst": 144970.0,
+    "india_date": "19/06/2026",
     "india_session": "PM",
-    "india_notes": "IBJA 999 benchmark (PM, 18/06/2026). Reflects real Indian retail market (import duty + local premium baked in)."
+    "india_notes": "IBJA 999 benchmark (PM, 19/06/2026). Reflects real Indian retail market (import duty + local premium baked in)."
   },
   "verdict": {
     "us_price_all_in_usd": 4281.4,
@@ -23,19 +23,19 @@
     "us_usd_per_10g": 1376.5,
     "us_inr_per_10g": 129962.35,
     "us_sales_tax_rate": 0.0,
-    "india_usd_per_gram": 161.56,
-    "india_inr_per_gram": 15253.58,
-    "india_usd_per_10g": 1615.59,
-    "india_inr_per_10g": 152535.79,
-    "delta_pct": -14.8,
-    "diff_usd_per_10g": -239.09,
-    "diff_inr_per_10g": -22573.44,
-    "abs_diff_usd_per_10g": 239.09,
-    "abs_diff_inr_per_10g": 22573.44,
+    "india_usd_per_gram": 158.15,
+    "india_inr_per_gram": 14931.91,
+    "india_usd_per_10g": 1581.52,
+    "india_inr_per_10g": 149319.1,
+    "delta_pct": -12.96,
+    "diff_usd_per_10g": -205.02,
+    "diff_inr_per_10g": -19356.75,
+    "abs_diff_usd_per_10g": 205.02,
+    "abs_diff_inr_per_10g": 19356.75,
     "verdict": "BUY_IN_US",
-    "verdict_human": "Save \u20b922,573 (\u2248 $239.09) per 10g buying in US vs India [14.80%]"
+    "verdict_human": "Save \u20b919,357 (\u2248 $205.02) per 10g buying in US vs India [12.96%]"
   },
-  "savings_inr_per_10g": 22573.44,
+  "savings_inr_per_10g": 19356.75,
   "alert_sent": false,
   "us_drop_alert_sent": false,
   "savings_alert_sent": false,
