@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-25T17:16:56+00:00",
+  "timestamp": "2026-07-25T19:24:23+00:00",
   "status": "ok",
   "inputs": {
     "spot_usd_per_oz": 4053.7,
@@ -57,5 +57,13 @@
       "low_at": "2026-06-24T16:34:07+00:00",
       "high_at": "2026-05-14T23:12:49+00:00"
     }
+  },
+  "alert_thresholds": {
+    "us_bar_drop_usd": 100.0,
+    "savings_increase_inr_per_10g": 500.0
+  },
+  "telegram": {
+    "bot_username": null,
+    "subscribe_url": null
   }
 }
