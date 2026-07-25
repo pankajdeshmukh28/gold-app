@@ -1,8 +1,9 @@
 name: Fetch gold prices
 
 on:
+  # Once daily at 16:17 UTC ≈ 9:17 AM Pacific (matches weekly-digest morning window).
   schedule:
-    - cron: "17 */2 * * *"
+    - cron: "17 16 * * *"
   workflow_dispatch:
     inputs:
       test_notify:
@@ -67,6 +68,8 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ADMIN_CHAT_IDS: ${{ vars.ADMIN_CHAT_IDS }}
           TEST_NOTIFY: ${{ inputs.test_notify }}
+          TELEGRAM_BOT_USERNAME: ${{ vars.TELEGRAM_BOT_USERNAME }}
+          DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
           COSTCO_PRODUCT_URL: ${{ vars.COSTCO_PRODUCT_URL }}
           COSTCO_SKU_GRAMS: ${{ vars.COSTCO_SKU_GRAMS }}
           JMBULLION_CATEGORY_URL: ${{ vars.JMBULLION_CATEGORY_URL }}
@@ -74,6 +77,7 @@ jobs:
           US_SALES_TAX_RATE: ${{ vars.US_SALES_TAX_RATE }}
           INDIA_GST_RATE: ${{ vars.INDIA_GST_RATE }}
           SAVINGS_INCREASE_THRESHOLD_INR: ${{ vars.SAVINGS_INCREASE_THRESHOLD_INR }}
+          US_PRICE_DROP_ALERT_USD: ${{ vars.US_PRICE_DROP_ALERT_USD }}
         run: python -m scripts.fetch_prices
 
       - name: Commit data changes

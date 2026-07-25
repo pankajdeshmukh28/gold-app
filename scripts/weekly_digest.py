@@ -121,7 +121,9 @@ def _warmup_message(now_utc: datetime, row_count: int) -> str:
         f"📅 <b>Weekly gold pulse — {end_local}</b>\n\n"
         f"Tracker is still warming up — {qualifier} in the past 7 days. "
         "Next Sunday's digest will have a full week of savings data to roll up.\n\n"
-        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>\n\n'
+        "<i>Not financial advice — directional comparison.</i>\n"
+        "<i>Reply /stop to unsubscribe · /help</i>"
     )
 
 
@@ -217,6 +219,9 @@ def build_message(data: Optional[dict], history: List[dict], now_utc: Optional[d
         f"<i>{len(rows)} checkpoints this week.</i>",
         "",
         f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>',
+        "",
+        "<i>Not financial advice — directional comparison.</i>",
+        "<i>Reply /stop to unsubscribe · /help</i>",
     ]
     return "\n".join(lines)
 

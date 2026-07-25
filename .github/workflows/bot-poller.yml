@@ -54,6 +54,9 @@ jobs:
           MAX_SUBSCRIBERS: ${{ vars.MAX_SUBSCRIBERS }}
           DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
           ADMIN_NAME: ${{ vars.ADMIN_NAME }}
+          TELEGRAM_BOT_USERNAME: ${{ vars.TELEGRAM_BOT_USERNAME }}
+          SAVINGS_INCREASE_THRESHOLD_INR: ${{ vars.SAVINGS_INCREASE_THRESHOLD_INR }}
+          US_PRICE_DROP_ALERT_USD: ${{ vars.US_PRICE_DROP_ALERT_USD }}
         run: python -m scripts.telegram_bot
 
       - name: Commit subscriber changes

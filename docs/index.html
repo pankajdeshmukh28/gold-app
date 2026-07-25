@@ -281,6 +281,74 @@
       font-size: 12px;
       margin-bottom: 16px;
     }
+    .trust-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .trust-bar #trust-updated { color: var(--fg); font-weight: 500; }
+    .trust-muted { font-size: 11px; margin-top: 6px; opacity: 0.9; }
+    .stale-banner {
+      background: #2a1f0a;
+      border: 1px solid #5a4014;
+      color: #fbbf24;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .hero-checkout {
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-checkout-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .hero-checkout-usd {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .savings-est {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.35;
+    }
+    .subscribe-card {
+      background: linear-gradient(180deg, #1a2e20, var(--surface));
+      border: 1px solid #2d4a36;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .subscribe-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .subscribe-sub { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.45; }
+    .subscribe-sample { font-size: 11px; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+    .subscribe-btn {
+      display: inline-block;
+      background: #22c55e;
+      color: #052e14 !important;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+    }
+    .methodology { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .methodology p { margin: 0 0 8px; }
+    .methodology strong { color: var(--fg); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -306,17 +374,38 @@
 
     <div id="error-banner" class="error-banner" style="display:none;"></div>
     <div id="notes-banner" class="notes-banner" style="display:none;"></div>
+    <div id="stale-banner" class="stale-banner" style="display:none;">
+      This snapshot is older than 26 hours — the daily update may have been missed. Check back later.
+    </div>
+
+    <div id="trust-bar" class="trust-bar" style="display:none;">
+      <div id="trust-updated">—</div>
+      <div id="trust-fx">—</div>
+      <div class="trust-muted">Same bar weight both sides · India = benchmark + GST · US = shelf price + tax if any · numbers may lag real markets</div>
+    </div>
 
     <div class="verdict-card">
-      <div class="verdict-label">Buying gold · today</div>
+      <div class="verdict-label">Buying in the US</div>
+      <div class="hero-checkout" id="hero-checkout-wrap" style="display:none;">
+        <div class="hero-checkout-label">What you pay for the bar (today)</div>
+        <div class="hero-checkout-usd" id="hero-bar-usd">—</div>
+      </div>
       <div class="verdict-big" id="verdict-big">—</div>
       <div class="savings-hero" id="savings-hero">—</div>
       <div class="savings-unit" id="savings-unit">per 10g</div>
       <div class="savings-meta" id="savings-meta">—</div>
+      <div class="savings-est" id="savings-est">
+        Estimated vs India on the same 10g basis (all-in where noted).
+      </div>
       <div class="verdict-sub" id="verdict-sub">—</div>
     </div>
 
-    <p class="meta-strip" id="meta-strip" style="display:none;"><span id="meta-bar-line">—</span></p>
+    <div id="subscribe-card" class="subscribe-card" style="display:none;">
+      <div class="subscribe-title">Get Telegram alerts</div>
+      <p class="subscribe-sub">Free. A few pings when the deal moves meaningfully — not every tick. Unsubscribe anytime (/stop).</p>
+      <p class="subscribe-sample" id="subscribe-sample">—</p>
+      <a id="subscribe-btn" class="subscribe-btn" href="#" target="_blank" rel="noopener">Open in Telegram</a>
+    </div>
 
     <div class="grid">
       <div class="cell">
@@ -367,8 +456,15 @@
     </div>
 
     <details class="tech-details">
-      <summary>Spot, FX &amp; source detail</summary>
+      <summary>How we compare &amp; sources</summary>
       <div class="details details-inner">
+        <div class="methodology">
+          <p><strong>What you’re seeing</strong> — A directional check: “If I buy this gold bar in the US today, how does that stack up to a typical India price for the same amount of gold?”</p>
+          <p><strong>US price</strong> — Shelf/checkout-style bar price (Costco → JM Bullion → estimate if sites block us).</p>
+          <p><strong>India price</strong> — IBJA 999 benchmark + 3% GST when available; otherwise a rough estimate.</p>
+          <p><strong>Savings ₹/10g</strong> — Estimated difference, not tax or investment advice.</p>
+        </div>
+        <div class="row"><span class="k">When we send alerts</span><span class="v" id="alert-when">—</span></div>
         <div class="row"><span class="k">Spot gold</span><span class="v" id="spot">—</span></div>
         <div class="row"><span class="k">USD → INR</span><span class="v" id="fx">—</span></div>
         <div class="row"><span class="k">Bar checkout (SKU)</span><span class="v" id="us-price">—</span></div>
@@ -380,8 +476,14 @@
     </details>
 
     <footer>
-      Directional only, not financial advice. Data updates every few hours.<br/>
-      <a id="src-link" target="_blank" rel="noopener">source</a>
+      <div style="margin-bottom:10px;line-height:1.45;">
+        Gold Pulse is for information only — not financial advice. Prices are directional; your real checkout can differ (premiums, payment, shipping, state rules).
+      </div>
+      <div style="margin-bottom:10px;line-height:1.45;font-size:10px;">
+        Alerts go through Telegram; we store chat IDs only to deliver messages. Reply /stop to unsubscribe.
+      </div>
+      Data refreshes once a day via automation.<br/>
+      <a id="src-link" target="_blank" rel="noopener">US price source</a>
     </footer>
   </div>
 
@@ -400,6 +502,19 @@
       if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
       if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
       return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function fmtIsoUtc(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleString('en-GB', {
+        timeZone: 'UTC',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) + ' UTC';
     }
 
     function setStatus(state, title) {
@@ -554,8 +669,14 @@
           return;
         }
 
-        const stale = (Date.now() - new Date(data.timestamp).getTime()) > 1000 * 60 * 60 * 12;
-        setStatus(stale ? 'stale' : '', stale ? 'data is over 12h old' : 'ok');
+        const stale = (Date.now() - new Date(data.timestamp).getTime()) > 1000 * 60 * 60 * 26;
+        setStatus(stale ? 'stale' : '', stale ? 'data is over 26h old' : 'ok');
+        document.getElementById('stale-banner').style.display = stale ? 'block' : 'none';
+
+        const trustBar = document.getElementById('trust-bar');
+        trustBar.style.display = 'block';
+        document.getElementById('trust-updated').textContent =
+          'Updated ' + fmtIsoUtc(data.timestamp) + ' · ' + relTime(data.timestamp);
 
         const v = data.verdict || {};
         document.getElementById('verdict-big').textContent =
@@ -597,6 +718,55 @@
         document.getElementById('in-per-10g-usd').textContent = '≈ ' + fmt$(v.india_usd_per_10g);
 
         const inputs = data.inputs || {};
+        if (inputs.usd_inr != null) {
+          document.getElementById('trust-fx').textContent =
+            'USD→INR ₹' + fmtNum(inputs.usd_inr, 2) + ' (used for conversion)';
+        } else {
+          document.getElementById('trust-fx').textContent = '—';
+        }
+
+        const hw = document.getElementById('hero-checkout-wrap');
+        const hbu = document.getElementById('hero-bar-usd');
+        if (inputs.us_price_usd != null) {
+          hw.style.display = 'block';
+          hbu.textContent = fmt$(inputs.us_price_usd);
+        } else {
+          hw.style.display = 'none';
+        }
+
+        const tg = data.telegram || {};
+        const subCard = document.getElementById('subscribe-card');
+        const subBtn = document.getElementById('subscribe-btn');
+        const subSample = document.getElementById('subscribe-sample');
+        if (tg.subscribe_url) {
+          subCard.style.display = 'block';
+          subBtn.href = tg.subscribe_url;
+          const savN = data.savings_inr_per_10g;
+          if (inputs.us_price_usd != null && v.india_inr_per_10g != null && savN != null) {
+            const sn = Number(savN);
+            subSample.textContent =
+              'Sample alert line: US bar ' + fmt$(inputs.us_price_usd) +
+              ' · ' + (sn >= 0 ? ('Save ' + fmtINR(sn) + '/10g vs India') : ('India ' + fmtINR(-sn) + '/10g cheaper')) +
+              ' · India ' + fmtINR(v.india_inr_per_10g) + '/10g';
+          } else {
+            subSample.textContent = 'Sample: short US bar line + savings vs India + India benchmark.';
+          }
+        } else {
+          subCard.style.display = 'none';
+        }
+
+        const at = data.alert_thresholds || {};
+        const aw = document.getElementById('alert-when');
+        if (at.us_bar_drop_usd != null && at.savings_increase_inr_per_10g != null) {
+          aw.textContent =
+            'US bar down ≥$' + Number(at.us_bar_drop_usd) +
+            ' or savings vs India up ≥₹' +
+            Math.round(Number(at.savings_increase_inr_per_10g)).toLocaleString('en-IN') +
+            '/10g vs last check';
+        } else {
+          aw.textContent = '—';
+        }
+
         const taxRate = v.us_sales_tax_rate || 0;
         const srcLabel = (inputs.us_source || '').toUpperCase();
         const taxLabel = taxRate > 0 ? ` · incl. ${(taxRate * 100).toFixed(2)}% tax` : ' · no bullion tax';
@@ -639,15 +809,6 @@
           trendFoot.style.display = 'block';
         } else {
           trendFoot.style.display = 'none';
-        }
-
-        const metaStrip = document.getElementById('meta-strip');
-        if (inputs.us_price_usd != null) {
-          metaStrip.style.display = 'block';
-          document.getElementById('meta-bar-line').textContent =
-            'Shelf bar · ' + fmt$(inputs.us_price_usd) + ' · refreshed ' + relTime(data.timestamp);
-        } else {
-          metaStrip.style.display = 'none';
         }
 
         const savingsNow = data.savings_inr_per_10g;

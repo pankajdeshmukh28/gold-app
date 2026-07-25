@@ -43,8 +43,11 @@ from scripts.config import (  # noqa: E402
     DATA_FILE,
     MAX_SUBSCRIBERS,
     REQUEST_TIMEOUT,
+    SAVINGS_INCREASE_THRESHOLD_INR,
     TELEGRAM_BOT_TOKEN,
+    TELEGRAM_BOT_USERNAME,
     TELEGRAM_UPDATES_LIMIT,
+    US_PRICE_DROP_ALERT_USD,
 )
 from scripts.notifier import send_telegram_message  # noqa: E402
 from scripts.state import (  # noqa: E402
@@ -145,18 +148,21 @@ def _resolve_target_chat_id(token: str, subscribers: List[dict]) -> Optional[int
 # ---------------------------------------------------------------------------
 
 def _welcome() -> str:
+    sub_line = ""
+    if TELEGRAM_BOT_USERNAME:
+        sub_line = (
+            f'\n<b>Subscribe:</b> <a href="https://t.me/{TELEGRAM_BOT_USERNAME}">'
+            f"t.me/{TELEGRAM_BOT_USERNAME}</a>\n"
+        )
     return (
-        "🟡 <b>Welcome to Gold Pulse!</b>\n\n"
-        "This bot tracks Costco gold prices vs India's IBJA rate (incl. 3% GST) "
-        "and pings you when buying in the US saves meaningfully more than last time.\n\n"
-        "<b>What you'll get:</b>\n"
-        "• Alerts when savings jump by ≥₹500/10g (usually a few times/month)\n"
-        "• A weekly summary every Sunday ~9am PT (low/high/avg for the week)\n\n"
-        "<b>Commands:</b>\n"
-        "/status — current savings snapshot\n"
-        "/help — show this help\n"
-        "/stop — unsubscribe anytime"
-        + _dashboard_footer()
+        "🟡 <b>Gold Pulse</b>\n"
+        "Compares <b>US bar checkout</b> to <b>India benchmark</b> (IBJA + 3% GST).\n\n"
+        "<b>Alerts</b> only on meaningful moves (not every price tick):\n"
+        f"• US bar down ≥ <b>${US_PRICE_DROP_ALERT_USD:.0f}</b> vs last check, or\n"
+        f"• Savings vs India up ≥ <b>₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g</b> vs last check.\n"
+        f"{sub_line}"
+        "<i>Not financial advice — directional only.</i>\n\n"
+        "<b>Snapshot right now</b> (/status):"
     )
 
 
@@ -182,9 +188,12 @@ def _help() -> str:
         "<b>Commands:</b>\n"
         "/start — subscribe\n"
         "/stop — unsubscribe\n"
-        "/status — current savings snapshot\n"
-        "/help — this message"
-        + _dashboard_footer()
+        "/status — current snapshot\n"
+        "/help — this message\n\n"
+        f"<b>Alerts fire when:</b> US bar down ≥${US_PRICE_DROP_ALERT_USD:.0f} "
+        f"or savings vs India up ≥₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g (vs last check).\n"
+        "<i>Not financial advice.</i>"
+        + _dashboard_footer(leading_newlines=2)
     )
 
 CAPPED_FULL = (
@@ -238,7 +247,10 @@ def handle_start(
 
     add_subscriber(subscribers, {"chat_id": chat_id, **user_info})
     d["subscribers"] = True
-    return _welcome(), d
+    # Immediately show a simple “today” snapshot so new users see value even
+    # if no threshold-based alert fires for days.
+    status_text, _ = handle_status()
+    return _welcome() + "\n\n" + status_text, d
 
 
 def handle_stop(
@@ -281,12 +293,12 @@ def handle_status() -> Tuple[str, Dict[str, bool]]:
     us_bar = inputs.get("us_price_usd")
     if us_bar is not None:
         us_src_bar = (inputs.get("us_source") or "").upper()
-        lines.append(f"🇺🇸 <b>US gold bar: ${float(us_bar):,.2f}</b> · {us_src_bar}")
+        lines.append(f"🇺🇸 <b>US bar: ${float(us_bar):,.2f}</b> · {us_src_bar}")
         lines.append("")
     if savings is not None and savings > 0:
-        lines.append(f"💰 <b>₹{savings:,.0f}/10g</b> saved buying in US")
+        lines.append(f"💰 <b>Save ₹{savings:,.0f}/10g</b> buying in the US vs India")
     elif savings is not None:
-        lines.append(f"India is ₹{-savings:,.0f}/10g cheaper right now (rare).")
+        lines.append(f"🇮🇳 India is <b>₹{-savings:,.0f}/10g</b> cheaper than this US price")
     lines.append("")
     if us_inr:
         us_src = (inputs.get("us_source") or "").upper()
@@ -306,13 +318,26 @@ def handle_status() -> Tuple[str, Dict[str, bool]]:
     if usb.get("low") is not None and ti.get("low") is not None:
         since = (te.get("since") or "")[:10]
         lines.append("")
-        lines.append(f"<b>Tracker range ({since})</b>")
+        lines.append(f"<b>Seen while tracking ({since})</b>")
         lines.append(
             f"US bar: ${float(usb['low']):,.2f} – ${float(usb['high']):,.2f}"
         )
         lines.append(
             f"India: ₹{float(ti['low']):,.0f} – ₹{float(ti['high']):,.0f}/10g all-in"
         )
+
+    at = data.get("alert_thresholds") or {}
+    aud = at.get("us_bar_drop_usd")
+    sinr = at.get("savings_increase_inr_per_10g")
+    if aud is not None and sinr is not None:
+        lines.append("")
+        lines.append(
+            "<i>We only ping on big moves: US bar down ≥$"
+            f"{float(aud):.0f} or savings vs India up ≥₹{float(sinr):,.0f}/10g "
+            "vs last check.</i>"
+        )
+    lines.append("")
+    lines.append("<i>Not financial advice — directional comparison.</i>")
 
     return "\n".join(lines) + _dashboard_footer(), _dirty()
 

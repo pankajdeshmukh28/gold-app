@@ -10,14 +10,14 @@ A tiny personal app that answers: *"Should I buy gold at Costco today, or is it 
 - Sends a **weekly Telegram digest** every Sunday 9am PT — low / high / avg savings for the week
 - Supports **multi-user subscriptions** — anyone can `/start` the bot to self-subscribe; admin controls (`/list`, `/kick`, `/block`, `/broadcast`) for moderation
 
-Everything runs on free infrastructure: GitHub Actions runs a cron every 2 hours (plus a separate Sunday digest), writes `docs/data.json`, and GitHub Pages serves the dashboard. No servers, no database, no hosting bills.
+Everything runs on free infrastructure: GitHub Actions runs a cron once a day (plus a separate Sunday digest), writes `docs/data.json`, and GitHub Pages serves the dashboard. No servers, no database, no hosting bills.
 
 ---
 
 ## Architecture
 
 ```
-GitHub Actions (cron every 2h)
+GitHub Actions (cron once daily ~9:17am PT)
   └─ scripts/fetch_prices.py
       ├─ fetch USD→INR          (open.er-api.com — free)
       ├─ fetch gold spot USD/oz (goldprice.org — free)
@@ -118,7 +118,7 @@ Then **Actions → Fetch gold prices → Run workflow** (manual dispatch). After
 - The dashboard URL should show real numbers
 - No Telegram message yet (first run — no previous price to compare)
 
-From then on, the cron runs every 2 hours. If the **buying-in-US savings** increase by ≥ ₹500/10g between runs (i.e. the US-over-India gap widened in your favour), you'll get a Telegram message. Direction matters — we stay quiet when the gap shrinks or when US gets more expensive, since those aren't "go buy now" signals.
+From then on, the cron runs once a day (~9:17am PT). If the **buying-in-US savings** increase by ≥ ₹500/10g between runs (i.e. the US-over-India gap widened in your favour), you'll get a Telegram message. Direction matters — we stay quiet when the gap shrinks or when US gets more expensive, since those aren't "go buy now" signals.
 
 ---
 
@@ -271,7 +271,7 @@ The cookies set during that session persist in Chromium's default profile and su
 ```
 gold-app/
 ├── .github/workflows/
-│   ├── fetch-prices.yml     # main cron (every 2h) + commit data + broadcast alerts
+│   ├── fetch-prices.yml     # main cron (once daily) + commit data + broadcast alerts
 │   ├── weekly-digest.yml    # Sunday 9am PT weekly digest broadcast
 │   └── bot-poller.yml       # every 5 min — handles /start /stop /admin commands
 ├── scripts/
@@ -330,7 +330,7 @@ Most things are tunable without code changes:
 | Tune | How |
 |---|---|
 | Track a different Costco SKU | Set `COSTCO_PRODUCT_URL` + `COSTCO_SKU_GRAMS` in GH Actions variables |
-| Change cron cadence | Edit `.github/workflows/fetch-prices.yml`, line `cron: "17 */2 * * *"` (currently every 2h, offset by 17 min) |
+| Change cron cadence | Edit `.github/workflows/fetch-prices.yml`, line `cron: "17 16 * * *"` (currently once daily at 16:17 UTC ≈ 9:17am PT) |
 | Quieter notifications | Raise `SAVINGS_INCREASE_THRESHOLD_INR` (e.g. `1000` for ≥₹1,000/10g improvements only) |
 | Louder notifications | Lower `SAVINGS_INCREASE_THRESHOLD_INR` (e.g. `250` — you'll get pinged more often) |
 | Different GST | Set `INDIA_GST_RATE` (e.g. `0.05`) |

@@ -71,6 +71,8 @@ TELEGRAM_BOT_TOKEN = _env_str("TELEGRAM_BOT_TOKEN", "")
 # you still get pinged) and it's the default admin for /kick, /list, etc.
 # Additional admins can be added via ADMIN_CHAT_IDS (comma-separated).
 TELEGRAM_CHAT_ID = _env_str("TELEGRAM_CHAT_ID", "")
+# Public bot @username (no @) for t.me links in dashboard / onboarding. Optional.
+TELEGRAM_BOT_USERNAME = _env_str("TELEGRAM_BOT_USERNAME", "").lstrip("@")
 _ADMIN_CHAT_IDS_RAW = _env_str("ADMIN_CHAT_IDS", "")
 
 

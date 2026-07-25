@@ -29,6 +29,7 @@ from scripts.config import (
     DATA_FILE,
     INDIA_GST_RATE,
     SAVINGS_INCREASE_THRESHOLD_INR,
+    TELEGRAM_BOT_USERNAME,
     US_PRICE_DROP_ALERT_USD,
     US_SALES_TAX_RATE,
 )
@@ -257,45 +258,44 @@ def _consumer_alert_body(
     savings_inr_per_10g: float,
     extremes: Optional[dict],
 ) -> str:
-    """Telegram HTML: what you pay in the US, India benchmark, savings, tracker hi/lo."""
-    if not extremes:
-        return _snapshot_tail(verdict_data)
+    """Telegram HTML: ultra-simple, consumer-first summary.
 
+    Goal: a non-technical user should understand it in <5 seconds.
+    Keep this to a handful of lines; defer detail to the dashboard.
+    """
     v = verdict_data
-    lines = [
-        "<b>While you're in the US</b>",
-        f"• You pay <b>${us_price_usd:,.2f}</b> for the bar ({us_source.upper()})",
-        f"• That's ≈ <b>${v['us_usd_per_10g']:,.2f}/10g</b> all-in (your checkout basis)",
-        "",
-        "<b>India (same /10g basis, all-in)</b>",
-        f"• <b>₹{v['india_inr_per_10g']:,.0f}</b> incl. GST · ≈ ${v['india_usd_per_10g']:,.2f}",
-    ]
+
+    lines = [f"🇺🇸 <b>US bar: ${us_price_usd:,.2f}</b> ({us_source.upper()})"]
     if savings_inr_per_10g > 0:
-        lines.append(
-            f"• <b>You save ₹{savings_inr_per_10g:,.0f}/10g</b> buying here vs India"
-        )
+        lines.append(f"💰 <b>You save ₹{savings_inr_per_10g:,.0f}/10g</b> vs India")
     elif savings_inr_per_10g < 0:
         lines.append(
-            f"• India is <b>₹{-savings_inr_per_10g:,.0f}/10g</b> cheaper than this US price"
+            f"🇮🇳 India is <b>₹{-savings_inr_per_10g:,.0f}/10g</b> cheaper than this US price"
         )
     else:
-        lines.append("• About tied either way on per 10g")
+        lines.append("⚖️ About the same either way (per 10g)")
 
-    tb = extremes.get("us_bar_usd") or {}
-    ti = extremes.get("india_inr_per_10g") or {}
-    since = extremes.get("since") or ""
-    if tb.get("low") is not None and ti.get("low") is not None:
-        since_short = since[:10] if len(since) >= 10 else since
-        lines.extend(
-            [
-                "",
-                f"<b>Tracker range (since {since_short})</b>",
-                f"• US bar: ${float(tb['low']):,.2f} – ${float(tb['high']):,.2f}",
-                f"• India: ₹{float(ti['low']):,.0f} – ₹{float(ti['high']):,.0f}/10g",
-            ]
-        )
+    # Always show the India benchmark line so the comparison is explicit.
+    lines.append(f"India: <b>₹{v['india_inr_per_10g']:,.0f}/10g</b> (all-in)")
 
     return "\n".join(lines)
+
+
+def _alert_footer(kind: str) -> str:
+    """Short trust + compliance footer on every broadcast alert."""
+    disclaimer = "<i>Not financial advice — directional comparison only.</i>"
+    if kind == "drop":
+        why = (
+            f"<i>Why you got this: US bar dropped ≥${US_PRICE_DROP_ALERT_USD:.0f} "
+            f"vs our last snapshot.</i>"
+        )
+    else:
+        why = (
+            f"<i>Why you got this: buying-in-US savings rose ≥₹{SAVINGS_INCREASE_THRESHOLD_INR:.0f}/10g "
+            f"vs last snapshot.</i>"
+        )
+    stop = "<i>Reply /stop to unsubscribe · /help</i>"
+    return "\n".join([disclaimer, why, stop])
 
 
 def maybe_notify_us_bar_drop(
@@ -323,10 +323,10 @@ def maybe_notify_us_bar_drop(
 
     msg = (
         f"📉 <b>US gold bar down ${drop_usd:,.0f}</b>\n"
-        f"<b>Now ${current_usd:,.2f}</b> (was ${last_us_price_usd:,.2f}) · "
-        f"{us_source.upper()}\n\n"
+        f"Now <b>${current_usd:,.2f}</b> (was ${last_us_price_usd:,.2f})\n\n"
         f"{_consumer_alert_body(verdict_data, current_usd, us_source, savings_inr_per_10g, extremes)}\n\n"
-        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>\n\n'
+        f"{_alert_footer('drop')}"
     )
 
     try:
@@ -375,43 +375,11 @@ def maybe_notify(
         )
         return None
 
-    # ── Build the message ──────────────────────────────────────────────
-    verdict = verdict_data["verdict"]
-    if verdict == "BUY_IN_US":
-        headline = (
-            f"💰 Save <b>₹{verdict_data['abs_diff_inr_per_10g']:,.0f}</b> "
-            f"(≈ ${verdict_data['abs_diff_usd_per_10g']:,.2f}) per 10g "
-            f"buying in <b>US</b>"
-        )
-    elif verdict == "BUY_IN_INDIA":
-        headline = (
-            f"🇮🇳 India is now cheaper by <b>₹{verdict_data['abs_diff_inr_per_10g']:,.0f}</b> "
-            f"(≈ ${verdict_data['abs_diff_usd_per_10g']:,.2f}) per 10g"
-        )
-    else:
-        headline = "⚖️ US and India roughly at parity"
-
-    # Describe the delta in plain language — did a gap open, narrow, or flip?
-    if last_savings_inr <= 0 < savings_inr_per_10g:
-        swing_line = (
-            f"Flipped: India was ₹{-last_savings_inr:,.0f} cheaper → "
-            f"now US is ₹{savings_inr_per_10g:,.0f} cheaper per 10g"
-        )
-    elif last_savings_inr < savings_inr_per_10g:
-        swing_line = (
-            f"US advantage grew by <b>₹{delta_inr:,.0f}/10g</b> "
-            f"(₹{last_savings_inr:,.0f} → ₹{savings_inr_per_10g:,.0f})"
-        )
-    else:
-        swing_line = f"Savings delta: ₹{delta_inr:+,.0f}/10g"
-
     msg = (
-        f"{_us_bar_headline(us_price_usd, us_source)}\n\n"
-        f"🟢 <b>Better time to buy — +₹{delta_inr:,.0f}/10g vs last check</b>\n"
-        f"{swing_line}\n\n"
-        f"{headline}\n\n"
+        f"🟢 <b>Better vs last check: +₹{delta_inr:,.0f}/10g</b>\n\n"
         f"{_consumer_alert_body(verdict_data, us_price_usd, us_source, savings_inr_per_10g, extremes)}\n\n"
-        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
+        f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>\n\n'
+        f"{_alert_footer('savings')}"
     )
 
     try:
@@ -449,7 +417,8 @@ def send_test_notification() -> int:
             f"${US_PRICE_DROP_ALERT_USD:,.0f} vs last check, and/or US-vs-India savings "
             f"up ≥ ₹{SAVINGS_INCREASE_THRESHOLD_INR:,.0f}/10g.\n\n"
             f"{_us_bar_headline(2650.0, 'example')} <i>(sample)</i>\n\n"
-            f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>'
+            f'🔗 <a href="{DASHBOARD_URL}">View live dashboard →</a>\n\n'
+            f"{_alert_footer('savings')}"
         )
         print("[test-notify] OK — check Telegram.")
         return 0
@@ -596,6 +565,18 @@ def main() -> int:
         ),
         "savings_increase_threshold_inr": SAVINGS_INCREASE_THRESHOLD_INR,
         "tracked_extremes": tracked_extremes,
+        "alert_thresholds": {
+            "us_bar_drop_usd": US_PRICE_DROP_ALERT_USD,
+            "savings_increase_inr_per_10g": SAVINGS_INCREASE_THRESHOLD_INR,
+        },
+        "telegram": {
+            "bot_username": TELEGRAM_BOT_USERNAME or None,
+            "subscribe_url": (
+                f"https://t.me/{TELEGRAM_BOT_USERNAME}"
+                if TELEGRAM_BOT_USERNAME
+                else None
+            ),
+        },
     }
     write_data_file(payload)
 
